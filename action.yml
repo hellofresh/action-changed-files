@@ -20,12 +20,12 @@ outputs:
     description: the output job matrix
     value: ${{ steps.neo.outputs.matrix }}
 runs:
-  using: "composite"
+  using: composite
   steps:
     - id: neo
       shell: bash
       run: |
-        ./neo/neo.py -p ${{ inputs.pattern }} \
+        ./neo.py -p ${{ inputs.pattern }} \
           --defaults=${{inputs.defaults}} \
           --default="${{inputs.default_patterns}}"
           --ignore-deleted-files=${{inputs.ignore-deleted-files}}
