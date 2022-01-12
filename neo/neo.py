@@ -168,7 +168,6 @@ if __name__ == "__main__":
         "--ignore-deleted-files",
         help="ignore deleted files",
         type=bool,
-        choices=["true", "false"],
         default="false",
     )
 
@@ -176,9 +175,7 @@ if __name__ == "__main__":
     defaults_arg_group.add_argument(
         "--defaults",
         help="if changed files don't match with the include pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
-        type=bool,
-        choices=["true", "false"],
-        default="false",
+        type=bool
     )
     defaults_arg_group.add_argument(
         "--default",

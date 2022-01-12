@@ -26,9 +26,9 @@ runs:
       shell: bash
       run: |
         ./neo/neo.py -p "${{ inputs.pattern }}" \
+          --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
           --defaults="${{inputs.defaults}}" \
           --default="${{inputs.default_patterns}}"
-          --ignore-deleted-files=${{inputs.ignore-deleted-files}}
 branding:
   icon: git-pull-request
   color: green
