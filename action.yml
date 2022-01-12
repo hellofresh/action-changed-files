@@ -5,11 +5,8 @@ inputs:
     description: regex pattern with named groups to match against changed files
     required: true
   defaults:
-    description: when set to true, if changed files don't match the pattern, recursively match all files in the repository.
+    description: when set to true, if changed files don't match the pattern, recursively match all files in the repository. you can also specify UNIX-style glob patterns to restrict this mode.
     default: "false"
-    required: false
-  default-patterns:
-    description: space separated list of patterns to apply the "defaults" mechanism to.
     required: false
   ignore-deleted-files:
     description: whether to ignore the deleted files or not
@@ -27,7 +24,7 @@ runs:
       run: |
         ./neo/neo.py -p "${{ inputs.pattern }}" \
           --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
-          --defaults="${{inputs.defaults}}" \
+          --defaults=${{inputs.defaults}} \
           --default="${{inputs.default_patterns}}"
 branding:
   icon: git-pull-request

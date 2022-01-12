@@ -170,15 +170,8 @@ if __name__ == "__main__":
         type=bool,
         default="false",
     )
-
-    defaults_arg_group = user_arg_group.add_mutually_exclusive_group()
-    defaults_arg_group.add_argument(
+    user_arg_group.add_argument(
         "--defaults",
-        help="if changed files don't match with the include pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
-        type=bool
-    )
-    defaults_arg_group.add_argument(
-        "--default",
         "-d",
         nargs="+",
         help="if changed files match with this pattern, ecursively match all files in the current directory with the include pattern (a.k.a. run everything)",
@@ -186,5 +179,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    # TODO: fix defaults handling here, this is for the morning :P
+    print(args.defaults)
     setup_logging(args.verbose)
     main(args)
