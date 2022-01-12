@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Generate matrix
         id: neo
-        uses: ./action.yml
+        uses: ./
         with:
           pattern: (?P<file>.*)
           defaults: true

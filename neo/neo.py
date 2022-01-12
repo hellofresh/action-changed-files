@@ -41,7 +41,11 @@ def generate_matrix(
         for path, _, files in os.walk(cwd):
             matches.extend(
                 filter(
-                    None, (include_regex.match(os.path.relpath(os.path.join(path, f), cwd)) for f in files)
+                    None,
+                    (
+                        include_regex.match(os.path.relpath(os.path.join(path, f), cwd))
+                        for f in files
+                    ),
                 )
             )
 
@@ -73,7 +77,9 @@ def main(args):
     r.raise_for_status()
 
     if args.ignore_deleted_files:
-        changed_files = [e["filename"] for e in r.json().get("files", []) if e["status"] != "removed"]
+        changed_files = [
+            e["filename"] for e in r.json().get("files", []) if e["status"] != "removed"
+        ]
     else:
         changed_files = [e["filename"] for e in r.json().get("files", [])]
 
@@ -121,7 +127,9 @@ def github_webhook_ref(dest: str, option_strings: list):
                     f"unsupported github event {github_event_name}"
                 )
 
-    return argparse._StoreAction(required=True, dest=dest, option_strings=option_strings)
+    return argparse._StoreAction(
+        required=True, dest=dest, option_strings=option_strings
+    )
 
 
 if __name__ == "__main__":
@@ -159,14 +167,18 @@ if __name__ == "__main__":
     user_arg_group.add_argument(
         "--ignore-deleted-files",
         help="ignore deleted files",
-        action="store_true",
+        type=bool,
+        choices=["true", "false"],
+        default="false",
     )
 
     defaults_arg_group = user_arg_group.add_mutually_exclusive_group()
     defaults_arg_group.add_argument(
         "--defaults",
         help="if changed files don't match with the include pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
-        action="store_true",
+        type=bool,
+        choices=["true", "false"],
+        default="false",
     )
     defaults_arg_group.add_argument(
         "--default",
