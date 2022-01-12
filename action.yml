@@ -1,0 +1,34 @@
+name: Neo
+description: Generate a matrix depending on changed files
+inputs:
+  pattern:
+    description: regex pattern with named groups to match against changed files
+    required: true
+  defaults:
+    description: when set to true, if changed files don't match the pattern, recursively match all files in the repository.
+    default: "false"
+    required: false
+  default-patterns:
+    description: space separated list of patterns to apply the "defaults" mechanism to.
+    required: false
+  ignore-deleted-files:
+    description: whether to ignore the deleted files or not
+    default: "false"
+    required: false
+outputs:
+  matrix:
+    description: the output job matrix
+    value: ${{ steps.neo.outputs.matrix }}
+runs:
+  using: "composite"
+  steps:
+    - id: neo
+      shell: bash
+      run: |
+        ./neo/neo.py -p ${{ inputs.pattern }} \
+          --defaults=${{inputs.defaults}} \
+          --default="${{inputs.default_patterns}}"
+          --ignore-deleted-files=${{inputs.ignore-deleted-files}}
+branding:
+  icon: git-pull-request
+  color: green
