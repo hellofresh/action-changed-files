@@ -20,6 +20,8 @@ jobs:
   neo:
     name: Test action
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.neo.outputs.matrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
