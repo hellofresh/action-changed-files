@@ -6,7 +6,6 @@ import glob
 import fnmatch
 import requests
 import json
-import logging
 import re
 from urllib.parse import quote_plus
 from typing import List
@@ -22,7 +21,7 @@ def generate_matrix(
 
     # store all match objects
     matches = list(filter(None, (include_regex.match(f) for f in changed_files)))
-    logging.info("Matches: %s", matches)
+    print("Matches: ", matches)
 
     # check if changed files match the so-called default patterns
     matched_default_patterns = [
@@ -32,11 +31,13 @@ def generate_matrix(
     ]
 
     if matched_default_patterns:
-        logging.info("Files changed in defaults patterns: %s", matched_default_patterns)
+        print("Files changed in defaults patterns: ", matched_default_patterns)
 
     # if nothing changed, list all files/directories
     if (not matches and defaults) or matched_default_patterns:
-        logging.info("Listing all files/directories matching provided pattern")
+        print(
+            "Listing all files/directories in repository matching the provided pattern"
+        )
         cwd = os.getenv("GITHUB_WORKSPACE", os.curdir)
         for path, _, files in os.walk(cwd):
             matches.extend(
@@ -65,39 +66,34 @@ def main(args):
     session = requests.session()
     # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
     if "CI" in os.environ:
-        logging.debug("Using HTTP token authentication")
         session.headers["Authorization"] = f"token {args.github_token}"
     else:
-        logging.debug("Using HTTP basic auth")
         session.auth = HTTPBasicAuth(args.github_username, args.github_token)
 
     url = f"https://api.github.com/repos/{args.github_repository}/compare/{quote_plus(args.github_base_ref)}...{quote_plus(args.github_head_ref)}"
-    logging.debug("API request: %s", url)
+    print("GitHub API request: %s", url)
     r = session.get(url)
     r.raise_for_status()
 
     if args.ignore_deleted_files:
-        logging.info("Ignoring deleted files")
+        print("Ignoring deleted files")
         changed_files = [
             e["filename"] for e in r.json().get("files", []) if e["status"] != "removed"
         ]
     else:
         changed_files = [e["filename"] for e in r.json().get("files", [])]
 
-    logging.info("Changed files: %s", changed_files)
+    print("Changed files: ", changed_files)
 
     matrix = generate_matrix(
         args.include_regex, changed_files, args.defaults, args.default_patterns
     )
 
-    logging.info("Generated matrix: %s", matrix)
+    print("Generated matrix: ", matrix)
 
     if os.getenv("GITHUB_ACTIONS"):
-        logging.debug(f"Outputting a matrix of {len(matrix)} combinations")
         files_json = json.dumps({"include": matrix})
         print(f"::set-output name=matrix::{files_json}")
-    else:
-        logging.info("Would output matrix: %s", matrix)
 
 
 def github_webhook_ref(dest: str, option_strings: list):
@@ -176,15 +172,14 @@ if __name__ == "__main__":
         "--defaults",
         help="if any changed files match this pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
         type=strtobool,
-        default="false"
+        default="false",
     )
     user_arg_group.add_argument(
         "--default-patterns",
         help="if any changed files match this pattern, apply --defaults",
         nargs="+",
-        default=os.getenv("DEFAULT_PATTERNS", "").splitlines()
+        default=os.getenv("DEFAULT_PATTERNS", "").splitlines(),
     )
 
     args = parser.parse_args()
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     main(args)
