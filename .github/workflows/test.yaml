@@ -27,7 +27,7 @@ jobs:
         id: neo
         uses: ./
         with:
-          pattern: (?P<file>.*)
+          pattern: (?P<dir>[^/]+)/
           defaults: true
           ignore-deleted-files: true
           default-patterns: |

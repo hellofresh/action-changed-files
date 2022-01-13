@@ -27,7 +27,7 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        DEFAULT_PATTERNS: ${{ inputs.default_patterns }}
+        DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
       run: |
         ./neo/neo.py -p "${{ inputs.pattern }}" \
           --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
