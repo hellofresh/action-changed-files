@@ -16,6 +16,10 @@ inputs:
     description: whether to ignore the deleted files or not
     default: "false"
     required: false
+  github-token:
+    description: token to access the GitHub API
+    required: false
+    default: '${{ github.token }}'
 outputs:
   matrix:
     description: the output job matrix
@@ -24,7 +28,7 @@ runs:
   using: docker
   image: Dockerfile
   env:
-    GITHUB_TOKEN: ${{ github.token }}
+    GITHUB_TOKEN: ${{ inputs.github-token }}
     DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
   args:
     - --pattern=${{ inputs.pattern }}
