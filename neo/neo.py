@@ -22,7 +22,7 @@ def generate_matrix(
 
     # store all match objects
     matches = list(filter(None, (include_regex.match(f) for f in changed_files)))
-    logging.debug("Got %d matches", len(matches))
+    logging.info("Matches: %s", matches)
 
     # check if changed files match the so-called default patterns
     matched_default_patterns = [
@@ -32,7 +32,7 @@ def generate_matrix(
     ]
 
     if matched_default_patterns:
-        logging.info("Files changed in defaults patterns %s", matched_default_patterns)
+        logging.info("Files changed in defaults patterns: %s", matched_default_patterns)
 
     # if nothing changed, list all files/directories
     if (not matches and defaults) or matched_default_patterns:
@@ -71,23 +71,26 @@ def main(args):
         logging.debug("Using HTTP basic auth")
         session.auth = HTTPBasicAuth(args.github_username, args.github_token)
 
-    r = session.get(
-        f"https://api.github.com/repos/{args.github_repository}/compare/{quote_plus(args.github_base_ref)}...{quote_plus(args.github_head_ref)}"
-    )
+    url = f"https://api.github.com/repos/{args.github_repository}/compare/{quote_plus(args.github_base_ref)}...{quote_plus(args.github_head_ref)}"
+    logging.debug("API request: %s", url)
+    r = session.get(url)
     r.raise_for_status()
 
     if args.ignore_deleted_files:
+        logging.info("Ignoring deleted files")
         changed_files = [
             e["filename"] for e in r.json().get("files", []) if e["status"] != "removed"
         ]
     else:
         changed_files = [e["filename"] for e in r.json().get("files", [])]
 
-    logging.debug("Changed files from GitHub: %s", changed_files)
+    logging.info("Changed files: %s", changed_files)
 
     matrix = generate_matrix(
         args.include_regex, changed_files, args.defaults, args.default_patterns
     )
+
+    logging.info("Generated matrix: %s", matrix)
 
     if os.getenv("GITHUB_ACTIONS"):
         logging.debug(f"Outputting a matrix of {len(matrix)} combinations")
@@ -183,5 +186,5 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    setup_logging(args.verbose)
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     main(args)
