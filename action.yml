@@ -16,24 +16,23 @@ inputs:
     description: whether to ignore the deleted files or not
     default: "false"
     required: false
-  github-token:
-    description: token to access the GitHub API
-    required: false
-    default: '${{ github.token }}'
 outputs:
   matrix:
     description: the output job matrix
-
+    value: ${{ steps.neo.outputs.matrix }}
 runs:
-  using: docker
-  image: Dockerfile
-  env:
-    GITHUB_TOKEN: ${{ inputs.github-token }}
-    DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
-  args:
-    - --pattern=${{ inputs.pattern }}
-    - --ignore-deleted-files=${{inputs.ignore-deleted-files}}
-    - --defaults=${{inputs.defaults}}
+  using: composite
+  steps:
+    - uses: actions/checkout@v2
+    - id: neo
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
+      run: |
+        ./neo/neo.py -p "${{ inputs.pattern }}" \
+          --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
+          --defaults=${{inputs.defaults}}
 branding:
   icon: git-pull-request
   color: green
