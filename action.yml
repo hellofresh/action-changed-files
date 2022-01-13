@@ -19,19 +19,17 @@ inputs:
 outputs:
   matrix:
     description: the output job matrix
-    value: ${{ steps.neo.outputs.matrix }}
+
 runs:
-  using: composite
-  steps:
-    - id: neo
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-        DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
-      run: |
-        ./neo/neo.py -p "${{ inputs.pattern }}" \
-          --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
-          --defaults=${{inputs.defaults}}
+  using: docker
+  image: Dockerfile
+  env:
+    GITHUB_TOKEN: ${{ github.token }}
+    DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
+  args:
+    - --pattern=${{ inputs.pattern }}
+    - --ignore-deleted-files=${{inputs.ignore-deleted-files}}
+    - --defaults=${{inputs.defaults}}
 branding:
   icon: git-pull-request
   color: green
