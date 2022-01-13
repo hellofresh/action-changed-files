@@ -2,7 +2,6 @@
 
 import unittest
 import neo
-from common import setup_logging
 
 
 class TestChangedFiles(unittest.TestCase):
