@@ -4,8 +4,9 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - neo/**
+  push:
+    branches:
+      - master
 
 jobs:
   python-tests:
