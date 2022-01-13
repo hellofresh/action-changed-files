@@ -86,7 +86,7 @@ def main(args):
     logging.debug("Changed files from GitHub: %s", changed_files)
 
     matrix = generate_matrix(
-        args.include_regex, changed_files, args.defaults, args.default
+        args.include_regex, changed_files, args.defaults, args.default_patterns
     )
 
     if os.getenv("GITHUB_ACTIONS"):
@@ -173,13 +173,16 @@ if __name__ == "__main__":
     user_arg_group.add_argument(
         "--defaults",
         "-d",
+        help="if any changed files match this pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
+        type=bool,
+    )
+    user_arg_group.add_argument(
+        "--default-patterns",
+        help="if any changed files match this pattern, apply --defaults",
         nargs="+",
-        help="if changed files match with this pattern, ecursively match all files in the current directory with the include pattern (a.k.a. run everything)",
-        default=[],
+        default=os.getenv("DEFAULT_PATTERNS", "").splitlines()
     )
 
     args = parser.parse_args()
-    # TODO: fix defaults handling here, this is for the morning :P
-    print(args.defaults)
     setup_logging(args.verbose)
     main(args)

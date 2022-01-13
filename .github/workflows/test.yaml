@@ -30,6 +30,8 @@ jobs:
           pattern: (?P<file>.*)
           defaults: true
           ignore-deleted-files: true
+          default-patterns: |
+            .github/**
       - name: Check output
         run: |
           echo ${{ steps.neo.outputs.matrix }}
