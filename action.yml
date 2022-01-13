@@ -29,7 +29,8 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
         DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
       run: |
-        ./neo/neo.py -p "${{ inputs.pattern }}" \
+        ${{ github.action_path }}/neo/neo.py \
+          --pattern "${{ inputs.pattern }}" \
           --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
           --defaults=${{inputs.defaults}}
 branding:
