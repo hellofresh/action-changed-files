@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - neo/**
+
+jobs:
+  python-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Run tests
+        run: ./neo/tests.py -v
+
+  neo:
+    name: Test action
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.neo.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Generate matrix
+        id: neo
+        uses: ./
+        with:
+          pattern: (?P<dir>[^/]+)/
+          defaults: true
+          ignore-deleted-files: true
+          default-patterns: |
+            .github/**
+
+  matrix-check:
+    name: Check matrix
+    runs-on: ubuntu-latest
+    needs: [ neo ]
+    strategy:
+      matrix: ${{ fromJson(needs.neo.outputs.matrix ) }}
+    steps:
+      - name: Echo
+        run: echo ${{ matrix.dir }}
