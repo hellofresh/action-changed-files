@@ -71,7 +71,7 @@ def main(args):
         session.auth = HTTPBasicAuth(args.github_username, args.github_token)
 
     url = f"https://api.github.com/repos/{args.github_repository}/compare/{quote_plus(args.github_base_ref)}...{quote_plus(args.github_head_ref)}"
-    print("GitHub API request: %s", url)
+    print("GitHub API request: ", url)
     r = session.get(url)
     r.raise_for_status()
 
@@ -153,9 +153,6 @@ if __name__ == "__main__":
     github_arg_group.add_argument("--github-base-ref", action=github_webhook_ref)
 
     user_arg_group = parser.add_argument_group("user-provided")
-    user_arg_group.add_argument(
-        "--verbose", "-v", help="increase verbosity", action="store_true"
-    )
     user_arg_group.add_argument(
         "--pattern",
         dest="include_regex",
