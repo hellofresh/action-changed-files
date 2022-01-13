@@ -4,13 +4,13 @@ Generate a GitHub Actions job matrix based on changed files (with an extra twist
 
 ## Problem statement
 
-Repositories are often composed of multiple modules or directories that are built & deployed differently. They can represent a part of the system, or a specific environment.
+Repositories are often composed of multiple modules or directories that are built & deployed differently. They can represent a part of the system, or a specific environment. Modules like this also often share some common files.
 
-Modules like this also often share a common path.
+The (traditional) and easiest way to guarantee that all changes are properly tested in CI is to run all jobs for every single change, but this can lead to a very long verification time.
 
-The best way to guarantee that all changes are properly tested is to build, test/validate the entire repository in CI, but this can lead to a very long verification time.
+Ideally, you want to be able to trigger (and skip) jobs based on the contents (and type) of a change.
 
-[Including paths](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#example-including-paths) and [matrix job strategy](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix) are two great features that can help reducing verification time, but they're still not flexible enough.
+[Trigger paths](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#example-including-paths) and [matrix job strategy](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix) are two great features that can help reducing verification time, but they're still not flexible enough.
 
 ## Example
 
