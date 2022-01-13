@@ -21,6 +21,8 @@ runs:
   steps:
     - id: neo
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         ./neo/neo.py -p "${{ inputs.pattern }}" \
           --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
