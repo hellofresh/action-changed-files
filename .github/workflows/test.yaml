@@ -24,11 +24,9 @@ jobs:
     outputs:
       matrix: ${{ steps.neo.outputs.matrix }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
       - name: Generate matrix
         id: neo
-        uses: ./
+        uses: hellofresh/action-changed-files@${{ github.ref }}
         with:
           pattern: (?P<dir>[^/]+)/
           defaults: true
