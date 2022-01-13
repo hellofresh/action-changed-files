@@ -50,3 +50,14 @@ def env_default(envvar):
     def wrapper(**kwargs):
         return EnvDefault(envvar, **kwargs)
     return wrapper
+
+def strtobool (val):
+    # from https://github.com/python/cpython/blob/main/Lib/distutils/util.py#L308
+    # since distutils is scheduled for removal
+    val = val.lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError("invalid truth value %r" % (val,))

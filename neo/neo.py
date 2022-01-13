@@ -11,12 +11,12 @@ import re
 from urllib.parse import quote_plus
 from typing import List
 
-from common import env_default, setup_logging
+from common import env_default, strtobool
 from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    include_regex: str, changed_files: List[str], default=False, default_patterns=[]
+    include_regex: str, changed_files: List[str], defaults=False, default_patterns=[]
 ):
     include_regex = re.compile(include_regex, re.M | re.S)
 
@@ -35,7 +35,7 @@ def generate_matrix(
         logging.info("Files changed in defaults patterns %s", matched_default_patterns)
 
     # if nothing changed, list all files/directories
-    if (not matches and default) or matched_default_patterns:
+    if (not matches and defaults) or matched_default_patterns:
         logging.info("Listing all files/directories matching provided pattern")
         cwd = os.getenv("GITHUB_WORKSPACE", os.curdir)
         for path, _, files in os.walk(cwd):
@@ -159,7 +159,6 @@ if __name__ == "__main__":
     )
     user_arg_group.add_argument(
         "--pattern",
-        "-p",
         dest="include_regex",
         help="regex pattern to match changed files against",
         required=True,
@@ -167,14 +166,14 @@ if __name__ == "__main__":
     user_arg_group.add_argument(
         "--ignore-deleted-files",
         help="ignore deleted files",
-        type=bool,
+        type=strtobool,
         default="false",
     )
     user_arg_group.add_argument(
         "--defaults",
-        "-d",
         help="if any changed files match this pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
-        type=bool,
+        type=strtobool,
+        default="false"
     )
     user_arg_group.add_argument(
         "--default-patterns",
