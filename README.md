@@ -135,7 +135,6 @@ Let's break down what will happen here with a few examples:
     </tr>
 </table>
 
-
 ## Reference
 
 <table>
