@@ -24,7 +24,7 @@ runs:
   using: composite
   steps:
     # required to compare the pattern on the files in the repo
-    - if: input.defaults || inputs.default-patterns != ''
+    - if: inputs.defaults || inputs.default-patterns != ''
       uses: actions/checkout@v2
 
     - id: neo
