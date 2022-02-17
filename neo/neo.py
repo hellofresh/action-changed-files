@@ -10,7 +10,7 @@ import re
 from urllib.parse import quote_plus
 from typing import List
 
-from common import env_default, strtobool
+from common import env_default, hdict, strtobool
 from requests.auth import HTTPBasicAuth
 
 
@@ -21,7 +21,7 @@ def generate_matrix(
 
     # store all match objects
     matches = list(filter(None, (include_regex.match(f) for f in changed_files)))
-    print("Matches: ", matches)
+    print("Matches: ", [m.string for m in matches])
 
     # check if changed files match the so-called default patterns
     matched_default_patterns = [
@@ -54,12 +54,12 @@ def generate_matrix(
     matrix = set()
     for match in matches:
         if match.groups():
-            matrix.add(tuple(match.groupdict().items()))
+            matrix.add(hdict(match.groupdict().items()))
         else:
-            matrix.add(tuple([("path", match.string)]))
+            matrix.add(hdict({"path": match.string}))
 
     # convert back to a dict (hashable, serializable)
-    return [dict(tuple(e)) for e in matrix]
+    return sorted(matrix)
 
 
 def main(args):
