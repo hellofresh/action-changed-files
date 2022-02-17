@@ -62,7 +62,7 @@ jobs:
         id: neo-infrastructure
         uses: hellofresh/action-changed-files
         with:
-            pattern: infrastructure/(P<environment>[^/]+)
+            pattern: infrastructure/(?P<environment>[^/]+)
             default-patterns: |
                 terraform-modules
                 deploy.sh
@@ -71,7 +71,7 @@ jobs:
         id: neo-library
         uses: hellofresh/action-changed-files
         with:
-            pattern: library/(P<lib>(?!common)[^/]+)
+            pattern: library/(?P<lib>(?!common)[^/]+)
             default-patterns: |
                 library/common
 
@@ -149,7 +149,7 @@ Let's break down what will happen here with a few examples:
         <td>string</td>
         <td><b>yes</b></td>
         <td>
-            Regular expression pattern with named groups. Changed files will be matched against this pattern and named groups will be extracted into the matrix. See <a href="https://docs.python.org/3/howto/regex.html#non-capturing-and-named-groups">the releveant section of the Python documentation</a> for the syntax reference.
+            Regular expression pattern with named groups. Changed files will be matched against this pattern and named groups will be extracted into the matrix. See <a href="https://docs.python.org/3/howto/regex.html#non-capturing-and-named-groups">the relevant section of the Python documentation</a> for the syntax reference.
         </td>
     </tr>
     <tr>
