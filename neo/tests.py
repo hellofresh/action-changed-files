@@ -60,6 +60,24 @@ class TestChangedFiles(unittest.TestCase):
             ],
         )
 
+    def test_changes_sorted(self):
+        self.assertListEqual(
+            neo.generate_matrix(
+                include_regex="clusters/.*",
+                changed_files=[
+                    "my_other_file/hello",
+                    "clusters/live/app",
+                    "clusters/staging/app",
+                    "clusters/staging/demo",
+                ],
+            ),
+            [
+                {"path": "clusters/live/app"},
+                {"path": "clusters/staging/app"},
+                {"path": "clusters/staging/demo"},
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
