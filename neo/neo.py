@@ -15,12 +15,16 @@ from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    include_regex: str, changed_files: List[str], defaults=False, default_patterns=[]
+    payload: dict, include_regex: str, defaults=False, default_patterns=[]
 ):
+    changed_files = [(e["filename"], e["status"] == "removed") for e in payload.get("files", [])]
+    print("Changed files: ", changed_files)
+
     include_regex = re.compile(include_regex, re.M | re.S)
 
     # store all match objects
-    matches = list(filter(None, (include_regex.match(f) for f in changed_files)))
+    print(changed_files)
+    matches = list(filter(None, (include_regex.match(f) for (f, _) in changed_files)))
     print("Matches: ", [m.string for m in matches])
 
     # check if changed files match the so-called default patterns
@@ -75,18 +79,8 @@ def main(args):
     r = session.get(url)
     r.raise_for_status()
 
-    if args.ignore_deleted_files:
-        print("Ignoring deleted files")
-        changed_files = [
-            e["filename"] for e in r.json().get("files", []) if e["status"] != "removed"
-        ]
-    else:
-        changed_files = [e["filename"] for e in r.json().get("files", [])]
-
-    print("Changed files: ", changed_files)
-
     matrix = generate_matrix(
-        args.include_regex, changed_files, args.defaults, args.default_patterns
+        r.json(), args.include_regex, args.defaults, args.default_patterns
     )
 
     print("Generated matrix: ", matrix)

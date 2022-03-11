@@ -8,7 +8,12 @@ class TestChangedFiles(unittest.TestCase):
     def test_no_changes(self):
         self.assertFalse(
             neo.generate_matrix(
-                include_regex="clusters/.*", changed_files=["clusters", "blah"]
+                include_regex="clusters/.*", payload={
+                    "files": [
+                        {"filename": "clusters", "status": "changed"},
+                        {"filename": "blah", "status": "changed"}
+                    ]
+                }
             )
         )
 
@@ -16,11 +21,13 @@ class TestChangedFiles(unittest.TestCase):
         self.assertCountEqual(
             neo.generate_matrix(
                 include_regex="clusters/(?P<environment>\w+)/.*",
-                changed_files=[
-                    "clusters/staging/app",
-                    "clusters/staging/demo",
-                    "clusters/live/app",
-                ],
+                payload={
+                    "files": [
+                        {"filename": "clusters/staging/app", "status": "changed"},
+                        {"filename": "clusters/staging/demo", "status": "changed"},
+                        {"filename": "clusters/live/app", "status": "changed"},
+                    ]
+                }
             ),
             [{"environment": "staging"}, {"environment": "live"}],
         )
@@ -29,11 +36,13 @@ class TestChangedFiles(unittest.TestCase):
         self.assertCountEqual(
             neo.generate_matrix(
                 include_regex="clusters/(?P<environment>\w+)/(?P<namespace>\w+)",
-                changed_files=[
-                    "clusters/staging/app",
-                    "clusters/live/app",
-                    "clusters/staging/demo",
-                ],
+                payload={
+                    "files": [
+                        {"filename": "clusters/staging/app", "status": "changed"},
+                        {"filename": "clusters/live/app", "status": "changed"},
+                        {"filename": "clusters/staging/demo", "status": "changed"},
+                    ]
+                }
             ),
             [
                 {"environment": "staging", "namespace": "app"},
@@ -46,12 +55,14 @@ class TestChangedFiles(unittest.TestCase):
         self.assertCountEqual(
             neo.generate_matrix(
                 include_regex="clusters/.*",
-                changed_files=[
-                    "clusters/staging/app",
-                    "clusters/live/app",
-                    "clusters/staging/demo",
-                    "my_other_file/hello",
-                ],
+                payload={
+                    "files": [
+                        {"filename": "clusters/staging/app", "status": "changed"},
+                        {"filename": "clusters/live/app", "status": "changed"},
+                        {"filename": "clusters/staging/demo", "status": "changed"},
+                        {"filename": "my_other_file/hello", "status": "changed"},
+                    ]
+                }
             ),
             [
                 {"path": "clusters/staging/app"},
@@ -64,12 +75,14 @@ class TestChangedFiles(unittest.TestCase):
         self.assertListEqual(
             neo.generate_matrix(
                 include_regex="clusters/.*",
-                changed_files=[
-                    "my_other_file/hello",
-                    "clusters/live/app",
-                    "clusters/staging/app",
-                    "clusters/staging/demo",
-                ],
+                payload={
+                    "files": [
+                        {"filename": "my_other_file/hello", "status": "changed"},
+                        {"filename": "clusters/live/app", "status": "changed"},
+                        {"filename": "clusters/staging/app", "status": "changed"},
+                        {"filename": "clusters/staging/demo", "status": "changed"},
+                    ]
+                },
             ),
             [
                 {"path": "clusters/live/app"},
