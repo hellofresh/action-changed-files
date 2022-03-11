@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import os
 import argparse
 import glob
@@ -17,15 +18,19 @@ from requests.auth import HTTPBasicAuth
 def generate_matrix(
     payload: dict, include_regex: str, defaults=False, default_patterns=[]
 ):
-    changed_files = [(e["filename"], e["status"] == "removed") for e in payload.get("files", [])]
-    print("Changed files: ", changed_files)
-
     include_regex = re.compile(include_regex, re.M | re.S)
 
-    # store all match objects
-    print(changed_files)
-    matches = list(filter(None, (include_regex.match(f) for (f, _) in changed_files)))
-    print("Matches: ", [m.string for m in matches])
+    changed_files = [(e["filename"], e["status"]) for e in payload.get("files", [])]
+    matches = defaultdict(set)
+
+    def update_matches(files: List[str]):
+        for (filename, status) in files:
+            match = include_regex.match(filename)
+            if match:
+                key = hdict(match.groupdict() if match.groupdict() else {"path": filename})
+                matches[key].add(status)
+
+    update_matches(changed_files)
 
     # check if changed files match the so-called default patterns
     matched_default_patterns = [
@@ -43,24 +48,15 @@ def generate_matrix(
             "Listing all files/directories in repository matching the provided pattern"
         )
         cwd = os.getenv("GITHUB_WORKSPACE", os.curdir)
-        for path, _, files in os.walk(cwd):
-            matches.extend(
-                filter(
-                    None,
-                    (
-                        include_regex.match(os.path.relpath(os.path.join(path, f), cwd))
-                        for f in files
-                    ),
-                )
-            )
+        default_files = [os.path.relpath(os.path.join(path, f), cwd) for path, _, files in os.walk(cwd) for f in files]
+        update_matches(default_files)
 
-    # transform matches into groups when applicable
-    matrix = set()
-    for match in matches:
-        if match.groups():
-            matrix.add(hdict(match.groupdict().items()))
-        else:
-            matrix.add(hdict({"path": match.string}))
+    # mark matrix entries with a status if all its matches have the same status
+    matrix = []
+    for (groups, statuses) in matches.items():
+        groups["reason"] = statuses.pop() if len(statuses) == 1 else "?"
+        matrix.append(groups)
+
 
     # convert back to a dict (hashable, serializable)
     return sorted(matrix)
