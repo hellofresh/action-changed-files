@@ -16,7 +16,7 @@ from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    payload: dict, include_regex: str, defaults=False, default_patterns=[]
+    payload: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
 ):
     include_regex = re.compile(include_regex, re.M | re.S)
 
@@ -47,8 +47,7 @@ def generate_matrix(
         print(
             "Listing all files/directories in repository matching the provided pattern"
         )
-        cwd = os.getenv("GITHUB_WORKSPACE", os.curdir)
-        default_files = [os.path.relpath(os.path.join(path, f), cwd) for path, _, files in os.walk(cwd) for f in files]
+        default_files = [(os.path.relpath(os.path.join(path, f), default_dir), "default") for path, _, files in os.walk(default_dir) for f in files]
         update_matches(default_files)
 
     # mark matrix entries with a status if all its matches have the same status
@@ -56,7 +55,6 @@ def generate_matrix(
     for (groups, statuses) in matches.items():
         groups["reason"] = statuses.pop() if len(statuses) == 1 else "?"
         matrix.append(groups)
-
 
     # convert back to a dict (hashable, serializable)
     return sorted(matrix)

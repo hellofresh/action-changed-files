@@ -2,6 +2,9 @@
 
 import unittest
 import neo
+import os
+import tempfile
+from pathlib import Path
 
 
 class TestChangedFiles(unittest.TestCase):
@@ -17,6 +20,28 @@ class TestChangedFiles(unittest.TestCase):
                 },
             )
         )
+
+    def test_no_changes_with_defaults(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(os.path.join(d, "staging.txt")).touch()
+            Path(os.path.join(d, "live.txt")).touch()
+            self.assertCountEqual(
+                neo.generate_matrix(
+                    include_regex="(?P<environment>staging|live)",
+                    defaults=True,
+                    default_dir=d,
+                    payload={
+                        "files": [
+                            {"filename": "clusters", "status": "modified"},
+                            {"filename": "blah", "status": "modified"},
+                        ]
+                    },
+                ),
+                [
+                    {"environment": "staging", "reason": "default"},
+                    {"environment": "live", "reason": "default"},
+                ],
+            )
 
     def test_changes_groups_level1(self):
         self.assertCountEqual(
