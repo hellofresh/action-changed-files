@@ -135,6 +135,30 @@ Let's break down what will happen here with a few examples:
     </tr>
 </table>
 
+### Change statuses
+
+Each matrix entry in the output JSON will also be annotated with an additional `reason` field that can help handling corner-cases like deleting a directory. If all matches of a set of groups have the same status, the `reason` field will be set to it.
+
+Example: if you use pattern `(?P<module>database-us|database-fr)` and all files in the `database-us` directory are deleted, the job matrix will look like:
+
+```json
+[
+    {
+        "module": "database-us",
+        "reason": "deleted"
+    },
+    {
+        "module": "database-fr",
+        "reason": "?"
+    }
+]
+```
+
+The same applies to any status, like `added` or `modified`.
+
+Note: if a pattern matching to the same set of groups were caused by multiple type of changes, the `reason` field is marked as `?`.
+
+
 ## Reference
 
 <table>
@@ -166,14 +190,6 @@ Let's break down what will happen here with a few examples:
         <td>no</td>
         <td>
             similar to the 'defaults' flag, except we match changed files on the provided UNIX-style glob pattern
-        </td>
-    </tr>
-    <tr>
-        <td>ignore-deleted-files</td>
-        <td>boolean</td>
-        <td>no</td>
-        <td>
-            if true, ignore deleted files
         </td>
     </tr>
 </table>

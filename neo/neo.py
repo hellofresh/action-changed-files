@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import os
 import argparse
 import glob
@@ -15,19 +16,32 @@ from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    include_regex: str, changed_files: List[str], defaults=False, default_patterns=[]
+    payload: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
 ):
     include_regex = re.compile(include_regex, re.M | re.S)
 
-    # store all match objects
-    matches = list(filter(None, (include_regex.match(f) for f in changed_files)))
-    print("Matches: ", [m.string for m in matches])
+    changed_files = [(e["filename"], e["status"]) for e in payload.get("files", [])]
+    matches = defaultdict(set)
+
+    def update_matches(files: List[str]):
+        for (filename, status) in files:
+            match = include_regex.match(filename)
+            if match:
+                if match.groupdict():
+                    if "reason" in match.groupdict().keys():
+                        raise ValueError("reason is a reserved name for the job matrix")
+                    key = hdict(match.groupdict())
+                else:
+                    key = hdict({"path": filename})
+                matches[key].add(status)
+
+    update_matches(changed_files)
 
     # check if changed files match the so-called default patterns
     matched_default_patterns = [
         pattern
         for pattern in default_patterns
-        if fnmatch.filter(changed_files, pattern)
+        if fnmatch.filter((c for c, _ in changed_files), pattern)
     ]
 
     if matched_default_patterns:
@@ -38,25 +52,14 @@ def generate_matrix(
         print(
             "Listing all files/directories in repository matching the provided pattern"
         )
-        cwd = os.getenv("GITHUB_WORKSPACE", os.curdir)
-        for path, _, files in os.walk(cwd):
-            matches.extend(
-                filter(
-                    None,
-                    (
-                        include_regex.match(os.path.relpath(os.path.join(path, f), cwd))
-                        for f in files
-                    ),
-                )
-            )
+        default_files = [(os.path.relpath(os.path.join(path, f), default_dir), "default") for path, _, files in os.walk(default_dir) for f in files]
+        update_matches(default_files)
 
-    # transform matches into groups when applicable
-    matrix = set()
-    for match in matches:
-        if match.groups():
-            matrix.add(hdict(match.groupdict().items()))
-        else:
-            matrix.add(hdict({"path": match.string}))
+    # mark matrix entries with a status if all its matches have the same status
+    matrix = []
+    for (groups, statuses) in matches.items():
+        groups["reason"] = statuses.pop() if len(statuses) == 1 else "?"
+        matrix.append(groups)
 
     # convert back to a dict (hashable, serializable)
     return sorted(matrix)
@@ -75,18 +78,8 @@ def main(args):
     r = session.get(url)
     r.raise_for_status()
 
-    if args.ignore_deleted_files:
-        print("Ignoring deleted files")
-        changed_files = [
-            e["filename"] for e in r.json().get("files", []) if e["status"] != "removed"
-        ]
-    else:
-        changed_files = [e["filename"] for e in r.json().get("files", [])]
-
-    print("Changed files: ", changed_files)
-
     matrix = generate_matrix(
-        args.include_regex, changed_files, args.defaults, args.default_patterns
+        r.json(), args.include_regex, args.defaults, args.default_patterns
     )
 
     print("Generated matrix: ", matrix)
