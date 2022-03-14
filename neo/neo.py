@@ -27,7 +27,12 @@ def generate_matrix(
         for (filename, status) in files:
             match = include_regex.match(filename)
             if match:
-                key = hdict(match.groupdict() if match.groupdict() else {"path": filename})
+                if match.groupdict():
+                    if "reason" in match.groupdict().keys():
+                        raise ValueError("reason is a reserved name for the job matrix")
+                    key = hdict(match.groupdict())
+                else:
+                    key = hdict({"path": filename})
                 matches[key].add(status)
 
     update_matches(changed_files)
