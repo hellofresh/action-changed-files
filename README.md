@@ -135,6 +135,8 @@ Let's break down what will happen here with a few examples:
     </tr>
 </table>
 
+### Change statuses
+
 Each matrix entry in the output JSON will also be annotated with an additional `reason` field that can help handling corner-cases like deleting a directory. If all matches of a set of groups have the same status, the `reason` field will be set to it.
 
 Example: if you use pattern `(?P<module>database-us|database-fr)` and all files in the `database-us` directory are deleted, the job matrix will look like:

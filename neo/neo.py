@@ -36,7 +36,7 @@ def generate_matrix(
     matched_default_patterns = [
         pattern
         for pattern in default_patterns
-        if fnmatch.filter(changed_files, pattern)
+        if fnmatch.filter((c for c, _ in changed_files), pattern)
     ]
 
     if matched_default_patterns:
