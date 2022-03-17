@@ -151,7 +151,7 @@ class TestChangedFiles(unittest.TestCase):
                 },
             ),
             [
-                {"environment": "staging", "reason": "?"},
+                {"environment": "staging", "reason": "updated"},
                 {"environment": "live", "reason": "modified"},
             ],
         )
