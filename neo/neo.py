@@ -58,7 +58,7 @@ def generate_matrix(
     # mark matrix entries with a status if all its matches have the same status
     matrix = []
     for (groups, statuses) in matches.items():
-        groups["reason"] = statuses.pop() if len(statuses) == 1 else "?"
+        groups["reason"] = statuses.pop() if len(statuses) == 1 else "updated"
         matrix.append(groups)
 
     # convert back to a dict (hashable, serializable)
