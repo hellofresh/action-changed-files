@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import rpdb; rpdb.Rpdb().set_trace()
+from remote_pdb import set_trace
+set_trace()
 
 from collections import defaultdict
 import os
