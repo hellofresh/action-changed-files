@@ -21,7 +21,7 @@ from requests.auth import HTTPBasicAuth
 def generate_matrix(
     payload: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
 ):
-    include_regex = re.compile(include_regex, re.M | re.S)
+    include_regex = re.compile(include_regex)
 
     changed_files = [(e["filename"], e["status"]) for e in payload.get("files", [])]
     matches = defaultdict(set)
