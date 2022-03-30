@@ -33,8 +33,9 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
         DEFAULT_PATTERNS: ${{ inputs.default-patterns }}
       run: |
+        pip install rpdb
         ${{ github.action_path }}/neo/neo.py \
-          --pattern \"${{ inputs.pattern }}\" \
+          --pattern \'${{ inputs.pattern }}\' \
           --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
           --defaults=${{inputs.defaults}}
 branding:
