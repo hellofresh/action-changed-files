@@ -35,7 +35,7 @@ runs:
       run: |
         pip install rpdb
         ${{ github.action_path }}/neo/neo.py \
-          --pattern \'${{ inputs.pattern }}\' \
+          --pattern "${{ inputs.pattern }}" \
           --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
           --defaults=${{inputs.defaults}}
 branding:
