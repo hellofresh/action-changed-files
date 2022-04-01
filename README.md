@@ -49,9 +49,8 @@ on:
       - master
 
 jobs:
-  neo:
+  generate-matrix:
     name: Generate job matrices
-    id: generate-matrix
     runs-on: ubuntu-latest
     # don't forget to declare outputs here!
     outputs:
