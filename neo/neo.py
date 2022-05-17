@@ -98,9 +98,9 @@ def github_webhook_ref(dest: str, option_strings: list):
             github_event = json.load(fp)
             if github_event_name == "pull_request":
                 return argparse.Action(
-                    default=github_event["pull_request"]["head"]["ref"]
+                    default=github_event["pull_request"]["head"]["sha"]
                     if is_github_head_ref
-                    else github_event["pull_request"]["base"]["ref"],
+                    else github_event["pull_request"]["base"]["sha"],
                     required=False,
                     dest=dest,
                     option_strings=option_strings,
