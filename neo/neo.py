@@ -16,11 +16,11 @@ from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    payload: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
+    files: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
 ):
     include_regex = re.compile(include_regex, re.M | re.S)
 
-    changed_files = [(e["filename"], e["status"]) for e in payload.get("files", [])]
+    changed_files = [(e["filename"], e["status"]) for e in files]
     matches = defaultdict(set)
 
     def update_matches(files: List[str]):
@@ -67,6 +67,9 @@ def generate_matrix(
 
 def main(args):
     session = requests.session()
+    session.hooks = {
+        "response": lambda r, *args, **kwargs: r.raise_for_status()
+    }
     # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
     if "CI" in os.environ:
         session.headers["Authorization"] = f"token {args.github_token}"
@@ -75,11 +78,17 @@ def main(args):
 
     url = f"https://api.github.com/repos/{args.github_repository}/compare/{quote_plus(args.github_base_ref)}...{quote_plus(args.github_head_ref)}"
     print("GitHub API request: ", url)
+
     r = session.get(url)
-    r.raise_for_status()
+    files = r.json().get("files", [])
+    while link := r.links.get("next"):
+        next_page_url = link["url"]
+        print(f"Loading next page: {next_page_url}")
+        r = session.get(next_page_url)
+        files.extend(r.json().get("files", []))
 
     matrix = generate_matrix(
-        r.json(), args.include_regex, args.defaults, args.default_patterns
+        files, args.include_regex, args.defaults, args.default_patterns
     )
 
     print("Generated matrix: ", matrix)
