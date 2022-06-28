@@ -162,12 +162,6 @@ if __name__ == "__main__":
         required=True,
     )
     user_arg_group.add_argument(
-        "--ignore-deleted-files",
-        help="ignore deleted files",
-        type=strtobool,
-        default="false",
-    )
-    user_arg_group.add_argument(
         "--defaults",
         help="if any changed files match this pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
         type=strtobool,

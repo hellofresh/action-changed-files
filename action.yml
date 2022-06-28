@@ -14,6 +14,7 @@ inputs:
     required: false
   ignore-deleted-files:
     description: whether to ignore the deleted files or not
+    deprecationMessage: not used anymore
     default: "false"
     required: false
 outputs:
@@ -35,7 +36,6 @@ runs:
       run: |
         ${{ github.action_path }}/neo/neo.py \
           --pattern "${{ inputs.pattern }}" \
-          --ignore-deleted-files=${{inputs.ignore-deleted-files}} \
           --defaults=${{inputs.defaults}}
 branding:
   icon: git-pull-request
