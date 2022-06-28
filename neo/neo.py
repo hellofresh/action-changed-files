@@ -16,7 +16,11 @@ from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    files: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
+    files: dict,
+    include_regex: str,
+    defaults=False,
+    default_patterns=[],
+    default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir),
 ):
     include_regex = re.compile(include_regex, re.M | re.S)
 
@@ -52,7 +56,11 @@ def generate_matrix(
         logging.info(
             "Listing all files/directories in repository matching the provided pattern"
         )
-        default_files = [(os.path.relpath(os.path.join(path, f), default_dir), "default") for path, _, files in os.walk(default_dir) for f in files]
+        default_files = [
+            (os.path.relpath(os.path.join(path, f), default_dir), "default")
+            for path, _, files in os.walk(default_dir)
+            for f in files
+        ]
         update_matches(default_files)
 
     # mark matrix entries with a status if all its matches have the same status
@@ -65,15 +73,22 @@ def generate_matrix(
     return sorted(matrix)
 
 
-def main(github_token: str, github_repository: str, github_base_ref: str, github_head_ref: str, include_regex: str, defaults: List[str] = [], default_patterns: List[str] = [], per_page: int = 0):
+def main(
+    github_token: str,
+    github_repository: str,
+    github_base_ref: str,
+    github_head_ref: str,
+    include_regex: str,
+    defaults: List[str] = [],
+    default_patterns: List[str] = [],
+    per_page: int = 0,
+):
     with requests.session() as session:
-        session.hooks = {
-            "response": lambda r, *args, **kwargs: r.raise_for_status()
-        }
+        session.hooks = {"response": lambda r, *args, **kwargs: r.raise_for_status()}
         # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
         session.headers["Authorization"] = f"token {github_token}"
         if per_page:
-            session.params = { "per_page": per_page }
+            session.params = {"per_page": per_page}
 
         url = f"https://api.github.com/repos/{github_repository}/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
         logging.info("GitHub API request: %s", url)
@@ -86,9 +101,7 @@ def main(github_token: str, github_repository: str, github_base_ref: str, github
             r = session.get(next_page_url)
             files.extend(r.json().get("files", []))
 
-    matrix = generate_matrix(
-        files, include_regex, defaults, default_patterns
-    )
+    matrix = generate_matrix(files, include_regex, defaults, default_patterns)
 
     return matrix
 
