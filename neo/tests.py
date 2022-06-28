@@ -140,5 +140,20 @@ class TestChangedFiles(unittest.TestCase):
         )
 
 
+class IntegrationTest(unittest.TestCase):
+
+    empty_repo_commit_sha = "6b5794416e6750d16fb126a04eadb681349e6947"
+    initial_import_commit_sha = "191fe221420a833dc9a43d3338c1d94ccab94ea6"
+
+    def test_basic(self):
+        matrix = neo.main(os.getenv("GITHUB_TOKEN"), "hellofresh/action-changed-files", self.empty_repo_commit_sha, self.initial_import_commit_sha, ".*")
+        self.assertEqual(len(matrix), 5)
+
+    def test_pagination(self):
+        unpaginated_result = neo.main(os.getenv("GITHUB_TOKEN"), "hellofresh/action-changed-files", self.empty_repo_commit_sha, self.initial_import_commit_sha, ".*")
+        paginated_result = neo.main(os.getenv("GITHUB_TOKEN"), "hellofresh/action-changed-files", self.empty_repo_commit_sha, self.initial_import_commit_sha, ".*", per_page=1)
+        self.assertListEqual(unpaginated_result, paginated_result)
+
+
 if __name__ == "__main__":
     unittest.main()
