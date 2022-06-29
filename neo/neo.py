@@ -3,8 +3,8 @@
 from collections import defaultdict
 import os
 import argparse
-import glob
 import fnmatch
+import logging
 import requests
 import json
 import re
@@ -16,11 +16,15 @@ from requests.auth import HTTPBasicAuth
 
 
 def generate_matrix(
-    payload: dict, include_regex: str, defaults=False, default_patterns=[], default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)
+    files: dict,
+    include_regex: str,
+    defaults=False,
+    default_patterns=[],
+    default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir),
 ):
     include_regex = re.compile(include_regex, re.M | re.S)
 
-    changed_files = [(e["filename"], e["status"]) for e in payload.get("files", [])]
+    changed_files = [(e["filename"], e["status"]) for e in files]
     matches = defaultdict(set)
 
     def update_matches(files: List[str]):
@@ -45,14 +49,18 @@ def generate_matrix(
     ]
 
     if matched_default_patterns:
-        print("Files changed in defaults patterns: ", matched_default_patterns)
+        logging.info("Files changed in defaults patterns: %s", matched_default_patterns)
 
     # if nothing changed, list all files/directories
     if (not matches and defaults) or matched_default_patterns:
-        print(
+        logging.info(
             "Listing all files/directories in repository matching the provided pattern"
         )
-        default_files = [(os.path.relpath(os.path.join(path, f), default_dir), "default") for path, _, files in os.walk(default_dir) for f in files]
+        default_files = [
+            (os.path.relpath(os.path.join(path, f), default_dir), "default")
+            for path, _, files in os.walk(default_dir)
+            for f in files
+        ]
         update_matches(default_files)
 
     # mark matrix entries with a status if all its matches have the same status
@@ -65,28 +73,37 @@ def generate_matrix(
     return sorted(matrix)
 
 
-def main(args):
-    session = requests.session()
-    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
-    if "CI" in os.environ:
-        session.headers["Authorization"] = f"token {args.github_token}"
-    else:
-        session.auth = HTTPBasicAuth(args.github_username, args.github_token)
+def main(
+    github_token: str,
+    github_repository: str,
+    github_base_ref: str,
+    github_head_ref: str,
+    include_regex: str,
+    defaults: List[str] = [],
+    default_patterns: List[str] = [],
+    per_page: int = 0,
+):
+    with requests.session() as session:
+        session.hooks = {"response": lambda r, *args, **kwargs: r.raise_for_status()}
+        # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+        session.headers["Authorization"] = f"token {github_token}"
+        if per_page:
+            session.params = {"per_page": per_page}
 
-    url = f"https://api.github.com/repos/{args.github_repository}/compare/{quote_plus(args.github_base_ref)}...{quote_plus(args.github_head_ref)}"
-    print("GitHub API request: ", url)
-    r = session.get(url)
-    r.raise_for_status()
+        url = f"https://api.github.com/repos/{github_repository}/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
+        logging.info("GitHub API request: %s", url)
 
-    matrix = generate_matrix(
-        r.json(), args.include_regex, args.defaults, args.default_patterns
-    )
+        r = session.get(url)
+        files = r.json().get("files", [])
+        while link := r.links.get("next"):
+            next_page_url = link["url"]
+            logging.info(f"Loading next page: {next_page_url}")
+            r = session.get(next_page_url)
+            files.extend(r.json().get("files", []))
 
-    print("Generated matrix: ", matrix)
+    matrix = generate_matrix(files, include_regex, defaults, default_patterns)
 
-    if os.getenv("GITHUB_ACTIONS"):
-        files_json = json.dumps({"include": matrix})
-        print(f"::set-output name=matrix::{files_json}")
+    return matrix
 
 
 def github_webhook_ref(dest: str, option_strings: list):
@@ -131,18 +148,10 @@ if __name__ == "__main__":
     github_arg_group.add_argument(
         "--github-repository", action=env_default("GITHUB_REPOSITORY"), required=True
     )
-
     github_arg_group.add_argument(
         "--github-token", action=env_default("GITHUB_TOKEN"), required=True
     )
-    github_arg_group.add_argument(
-        "--github-username",
-        help="provide this argument if testing locally",
-        required=False,
-    )
-
     github_arg_group.add_argument("--github-head-ref", action=github_webhook_ref)
-
     github_arg_group.add_argument("--github-base-ref", action=github_webhook_ref)
 
     user_arg_group = parser.add_argument_group("user-provided")
@@ -151,12 +160,6 @@ if __name__ == "__main__":
         dest="include_regex",
         help="regex pattern to match changed files against",
         required=True,
-    )
-    user_arg_group.add_argument(
-        "--ignore-deleted-files",
-        help="ignore deleted files",
-        type=strtobool,
-        default="false",
     )
     user_arg_group.add_argument(
         "--defaults",
@@ -171,5 +174,13 @@ if __name__ == "__main__":
         default=os.getenv("DEFAULT_PATTERNS", "").splitlines(),
     )
 
-    args = parser.parse_args()
-    main(args)
+    logging.basicConfig()
+
+    args = vars(parser.parse_args())
+
+    matrix = main(**args)
+    logging.info(matrix)
+
+    if os.getenv("GITHUB_ACTIONS"):
+        files_json = json.dumps({"include": matrix})
+        print(f"::set-output name=matrix::{files_json}")
