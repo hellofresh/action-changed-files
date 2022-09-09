@@ -158,12 +158,12 @@ class TestChangedFiles(unittest.TestCase):
             neo.set_github_actions_output(matrix)
 
         output = f.getvalue()
-        expectedOutput = json.dumps({"include": matrix})
+        expected_matrix_output = json.dumps({"include": matrix})
         self.assertEqual(
-                f"::set-output name=matrix::{expectedOutput}\n",
+                f"""::set-output name=matrix::{expected_matrix_output}
+::set-output name=matrix-length::3\n""",
                 output,
                 )
-
 
 
 class IntegrationTest(unittest.TestCase):

@@ -143,6 +143,7 @@ def github_webhook_ref(dest: str, option_strings: list):
 def set_github_actions_output(matrix: List):
     files_json = json.dumps({"include": matrix})
     print(f"::set-output name=matrix::{files_json}")
+    print(f"::set-output name=matrix-length::{len(matrix)}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
