@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.neo.outputs.matrix }}
+      matrix-length: ${{ steps.neo.outputs.matrix-length }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -45,5 +46,8 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.neo.outputs.matrix ) }}
     steps:
-      - name: Echo
+      - name: Echo Matrix Directory
         run: echo ${{ matrix.dir }}
+
+      - name: Echo Matrix Length
+        run: echo ${{ needs.neo.outputs.matrix-length }}

@@ -21,6 +21,9 @@ outputs:
   matrix:
     description: the output job matrix
     value: ${{ steps.neo.outputs.matrix }}
+  matrix-length:
+    description: the length of the matrix
+    value: ${{ steps.neo.outputs.matrix-length }}
 runs:
   using: composite
   steps:
