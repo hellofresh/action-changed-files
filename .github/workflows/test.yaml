@@ -46,7 +46,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.neo.outputs.matrix ) }}
     steps:
-      - name: Echo Matrix
+      - name: Echo Matrix Directory
         run: echo ${{ matrix.dir }}
 
       - name: Echo Matrix Length
