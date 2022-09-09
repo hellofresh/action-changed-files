@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import neo
 
-import unittest
+import contextlib
+import io
+import json
 import os
 import tempfile
+import unittest
 from pathlib import Path
 
 
@@ -139,6 +142,28 @@ class TestChangedFiles(unittest.TestCase):
                 {"environment": "live", "reason": "modified"},
             ],
         )
+
+    def test_github_outputs(self):
+        matrix = neo.generate_matrix(
+            include_regex="clusters/.*",
+            files=[
+                {"filename": "clusters/staging/app", "status": "modified"},
+                {"filename": "clusters/live/app", "status": "modified"},
+                {"filename": "clusters/staging/demo", "status": "modified"},
+                {"filename": "my_other_file/hello", "status": "modified"},
+            ]
+        )
+
+        with contextlib.redirect_stdout(io.StringIO()) as f:
+            neo.set_github_actions_output(matrix)
+
+        output = f.getvalue()
+        expectedOutput = json.dumps({"include": matrix})
+        self.assertEqual(
+                f"::set-output name=matrix::{expectedOutput}\n",
+                output,
+                )
+
 
 
 class IntegrationTest(unittest.TestCase):
