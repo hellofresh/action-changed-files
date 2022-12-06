@@ -167,7 +167,8 @@ if __name__ == "__main__":
     )
     user_arg_group.add_argument(
         "--defaults",
-        help="if any changed files match this pattern, recursively match all files in the current directory with the include pattern (a.k.a. run everything)",
+        help="if any changed files match this pattern, recursively match all files in the current directory with the "
+             "include pattern (a.k.a. run everything)",
         type=strtobool,
         default="false",
     )
@@ -178,9 +179,11 @@ if __name__ == "__main__":
         default=os.getenv("DEFAULT_PATTERNS", "").splitlines(),
     )
 
-    logging.basicConfig()
-
     args = vars(parser.parse_args())
+
+    logging.basicConfig(
+        level=logging.DEBUG if os.getenv("NEO_LOG_LEVEL", "INFO") == "DEBUG" else logging.INFO
+    )
 
     matrix = main(**args)
     logging.info(matrix)
