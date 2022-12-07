@@ -33,9 +33,10 @@ def generate_matrix(
         files: list[dict[str, str]],
         include_regex: str,
         defaults: bool = False,
-        default_patterns: list = None,
+        default_patterns: object = None,
         default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir)) -> list[Any]:
 
+    default_patterns = list() if default_patterns is None else default_patterns
     include_regex = re.compile(include_regex, re.M | re.S)
 
     changed_files = [(e["filename"], e["status"]) for e in files]
@@ -80,12 +81,11 @@ def main(
         github_base_ref: str,
         github_head_ref: str,
         include_regex: str,
-        defaults=None,
-        default_patterns=None,
+        defaults: bool = False,
+        default_patterns: list = None,
         per_page: int = 0):
 
     default_patterns = [] if default_patterns is None else default_patterns
-    defaults = [] if defaults is None else defaults
 
     with requests.session() as session:
         session.hooks = {"response": lambda resp, *resp_args, **kwargs: resp.raise_for_status()}
@@ -135,7 +135,9 @@ def github_webhook_ref(dest: str, option_strings: list):
                     option_strings=option_strings,
                 )
             else:
-                raise NotImplementedError(f"unsupported github event {github_event_name}")
+                raise NotImplementedError(
+                    f"unsupported github event {github_event_name}"
+                )
 
     return argparse._StoreAction(
         required=True, dest=dest, option_strings=option_strings
