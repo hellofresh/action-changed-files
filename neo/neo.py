@@ -85,18 +85,7 @@ def main(
         defaults=None,
         default_patterns=None,
         per_page: int = 0):
-    """
 
-    :param github_token:
-    :param github_repository:
-    :param github_base_ref:
-    :param github_head_ref:
-    :param include_regex:
-    :param defaults:
-    :param default_patterns:
-    :param per_page:
-    :return:
-    """
     default_patterns = [] if default_patterns is None else default_patterns
     defaults = [] if defaults is None else defaults
 
