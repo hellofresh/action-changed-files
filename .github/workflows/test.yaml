@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  python-tests:
+  python-unit-tests:
     name: Unit tests
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +18,18 @@ jobs:
       - name: Run tests
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./neo/tests.py -v
+        run: ./neo/tests.py TestChangedFiles -v
+
+  python-integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Run tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./neo/tests.py IntegrationTest -v
 
   neo:
     name: Test action
@@ -32,10 +43,11 @@ jobs:
       - name: Generate matrix
         id: neo
         uses: ./
+        env:
+          NEO_LOG_LEVEL: DEBUG
         with:
           pattern: (?P<dir>[^/]+)/
           defaults: true
-          ignore-deleted-files: true
           default-patterns: |
             .github/**
 

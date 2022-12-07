@@ -39,7 +39,8 @@ runs:
       run: |
         ${{ github.action_path }}/neo/neo.py \
           --pattern "${{ inputs.pattern }}" \
-          --defaults=${{inputs.defaults}}
+          --defaults=${{inputs.defaults}} >> $GITHUB_OUTPUT
+
 branding:
   icon: git-pull-request
   color: green
