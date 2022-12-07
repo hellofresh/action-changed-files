@@ -159,7 +159,7 @@ def github_webhook_ref(dest: str, option_strings: list):
 def set_github_actions_output(generated_matrix: List):
     files_json = json.dumps({"include": generated_matrix})
     os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix={files_json}"
-    os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix-length={len(files_json)}"
+    os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix-length={len(generated_matrix)}"
     print(f"::set-output name=matrix::{files_json}")
     print(f"::set-output name=matrix-length::{len(generated_matrix)}")
     logging.debug(os.environ['GITHUB_OUTPUT'])
