@@ -50,6 +50,8 @@ jobs:
           defaults: true
           default-patterns: |
             .github/**
+      - name: Echo OUTPUTS
+        run: echo $GITHUB_OUTPUT
 
   matrix-check:
     name: Check matrix
