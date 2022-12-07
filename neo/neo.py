@@ -15,6 +15,15 @@ from common import env_default, hdict, strtobool
 
 
 def update_matches(files, include_regex):
+    """
+    The update_matches function takes a list of files and their statuses,
+    and returns a dictionary mapping the job matrix keys to sets of statuses.
+    For example:
+
+    :param files: Store the files that are found in the directory
+    :param include_regex: Filter the files that are included in the job matrix
+    :return: A dictionary of dictionaries
+    """
     matches = defaultdict(set)
     for (filename, status) in files:
         match = include_regex.match(filename)
@@ -30,15 +39,30 @@ def update_matches(files, include_regex):
 
 
 def generate_matrix(
-        files: list[dict[str, str]],
-        include_regex: str,
-        defaults: bool = False,
-        default_patterns: object = None,
-        default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir)) -> list[Any]:
+    files: list[dict[str, str]],
+    include_regex: str,
+    defaults: bool = False,
+    default_patterns: list | None = None,
+    default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir),
+) -> list[Any]:
+    """
+    The generate_matrix function takes a list of files and returns a matrix of
+    files that match the provided pattern. The function also takes an optional
+    include_regex parameter which is used to filter out unwanted files. If no
+    include_regex is provided, all changed files are included in the matrix.
 
-    default_patterns = list() if default_patterns is None else default_patterns
+    :param files: Pass in the list of files that were changed
+    :param include_regex:str: Indicate that the regex should be matched against the filename,
+    Filter the files that are included in the matrix Define the pattern that is used to filter the files
+    :param defaults: Determine if the default patterns should be used
+    :param default_patterns: Provide a list of default patterns that will be used to determine
+    if the matrix should be generated Define the pattern that is used to filter the files
+    :param default_dir: Specify the root directory of the repository or use the current directory
+    :return: A list of dictionaries
+    """
+    if default_patterns is None:
+        default_patterns = []
     include_regex = re.compile(include_regex, re.M | re.S)
-
     changed_files = [(e["filename"], e["status"]) for e in files]
 
     # check if changed files match the so-called default patterns
@@ -76,26 +100,31 @@ def generate_matrix(
 
 
 def main(
-        github_token: str,
-        github_repository: str,
-        github_base_ref: str,
-        github_head_ref: str,
-        include_regex: str,
-        defaults: bool = False,
-        default_patterns: list = None,
-        per_page: int = 0):
+    github_token: str,
+    github_repository: str,
+    github_base_ref: str,
+    github_head_ref: str,
+    include_regex: str,
+    defaults: bool = False,
+    default_patterns: list | None = None,
+    per_page: int = 0,
+):
 
-    default_patterns = [] if default_patterns is None else default_patterns
-
+    if default_patterns is None:
+        default_patterns = []
     with requests.session() as session:
-        session.hooks = {"response": lambda resp, *resp_args, **kwargs: resp.raise_for_status()}
+        session.hooks = {
+            "response": lambda resp, *resp_args, **kwargs: resp.raise_for_status()
+        }
         # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
         session.headers["Authorization"] = f"token {github_token}"
         if per_page:
             session.params = {"per_page": per_page}
 
-        compare_url = f"https://api.github.com/repos/{github_repository}" \
-                      f"/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
+        compare_url = (
+            f"https://api.github.com/repos/{github_repository}"
+            f"/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
+        )
         logging.info(f"GitHub API request: {compare_url}")
 
         r = session.get(compare_url)
@@ -110,6 +139,16 @@ def main(
 
 
 def github_webhook_ref(dest: str, option_strings: list):
+    """
+    The github_webhook_ref function is a helper function that returns an argparse.Action object
+    that will extract the ref from either the head or base of a pull request, depending on whether
+    the --github-head-ref option was passed to the program. If neither --github-head-ref nor
+    --github-base-ref are passed, then this action will default to using the base ref.
+
+    :param dest:str: Specify the name of the attribute to which
+    :param option_strings:list: Determine the name of the argument
+    :return: An action that will be used by the `github_arg_group`
+    """
     github_event_name = os.getenv("GITHUB_EVENT_NAME", None)
     github_event_path = os.getenv("GITHUB_EVENT_PATH", None)
     is_github_head_ref = "--github-head-ref" in option_strings
@@ -144,7 +183,16 @@ def github_webhook_ref(dest: str, option_strings: list):
     )
 
 
-def set_github_actions_output(generated_matrix: List):
+def set_github_actions_output(generated_matrix: List[dict]) -> None :
+    """
+    The set_github_actions_output function is used to generate the output for GitHub Actions.
+    It takes in a list of dictionaries and prints out two environment variables: matrix, which contains
+    the JSON representation of the matrix, and matrix-length, which contains an integer representing
+    the number of rows in the matrix.
+
+    :param generated_matrix:List[dict]: Pass the generated matrix to the function
+    :return: The generated matrix in a format that can be used by the github actions workflow
+    """
     files_json = json.dumps({"include": generated_matrix})
     print(f"matrix={files_json}")
     print(f"matrix-length={len(generated_matrix)}")
@@ -173,7 +221,7 @@ if __name__ == "__main__":
     user_arg_group.add_argument(
         "--defaults",
         help="if any changed files match this pattern, recursively match all files in the current directory with the "
-             "include pattern (a.k.a. run everything)",
+        "include pattern (a.k.a. run everything)",
         type=strtobool,
         default="false",
     )
@@ -187,7 +235,9 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     logging.basicConfig(
-        level=logging.DEBUG if os.getenv("NEO_LOG_LEVEL", "INFO") == "DEBUG" else logging.INFO
+        level=logging.DEBUG
+        if os.getenv("NEO_LOG_LEVEL", "INFO") == "DEBUG"
+        else logging.INFO
     )
 
     matrix = main(**args)

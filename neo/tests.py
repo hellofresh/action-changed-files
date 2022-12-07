@@ -151,7 +151,7 @@ class TestChangedFiles(unittest.TestCase):
                 {"filename": "clusters/live/app", "status": "modified"},
                 {"filename": "clusters/staging/demo", "status": "modified"},
                 {"filename": "my_other_file/hello", "status": "modified"},
-            ]
+            ],
         )
         with contextlib.redirect_stdout(io.StringIO()) as f:
             neo.set_github_actions_output(matrix)
