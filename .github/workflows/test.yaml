@@ -48,7 +48,6 @@ jobs:
         with:
           pattern: (?P<dir>[^/]+)/
           defaults: true
-          ignore-deleted-files: true
           default-patterns: |
             .github/**
 
