@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ neo ]
     strategy:
-      matrix: ${{ fromJson(needs.neo.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.neo.outputs.matrix ) }}
     steps:
       - name: Echo Matrix Directory
         run: echo ${{ matrix.dir }}
