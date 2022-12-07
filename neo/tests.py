@@ -154,16 +154,12 @@ class TestChangedFiles(unittest.TestCase):
             ]
         )
 
-        with contextlib.redirect_stdout(io.StringIO()) as f:
-            neo.set_github_actions_output(matrix)
+        neo.set_github_actions_output(matrix)
 
-        output = f.getvalue()
+        output = os.getenv('GITHUB_OUTPUT', None)
         expected_matrix_output = json.dumps({"include": matrix})
-        self.assertEqual(
-            f"""::set-output name=matrix::{expected_matrix_output}
-::set-output name=matrix-length::3\n""",
-            output,
-        )
+        self.assertIn(f"matrix={expected_matrix_output}", output)
+        self.assertIn(f"matrix-length=3", output)
 
 
 class IntegrationTest(unittest.TestCase):

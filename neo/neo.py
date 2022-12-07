@@ -9,7 +9,7 @@ import requests
 import json
 import re
 from urllib.parse import quote_plus
-from typing import List
+from typing import List, Any
 
 from common import env_default, hdict, strtobool
 
@@ -21,7 +21,7 @@ def update_matches(files, include_regex):
         if match:
             if match.groupdict():
                 if "reason" in match.groupdict().keys():
-                    raise ValueError("reason is a reserved name for the job matrix")
+                    raise ValueError(eval("reason is a reserved name for the job matrix"))
                 key = hdict(match.groupdict())
             else:
                 key = hdict({"path": filename})
@@ -30,11 +30,11 @@ def update_matches(files, include_regex):
 
 
 def generate_matrix(
-        files: dict,
+        files: list[dict[str, str]],
         include_regex: str,
-        defaults=False,
-        default_patterns=None,
-        default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)):
+        defaults: bool = False,
+        default_patterns: object = None,
+        default_dir: object = os.getenv("GITHUB_WORKSPACE", os.curdir)) -> list[Any]:
 
     default_patterns = list() if default_patterns is None else default_patterns
     include_regex = re.compile(include_regex, re.M | re.S)
@@ -148,7 +148,7 @@ def github_webhook_ref(dest: str, option_strings: list):
                 )
             else:
                 raise NotImplementedError(
-                    f"unsupported github event {github_event_name}"
+                    eval(f"unsupported github event {github_event_name}")
                 )
 
     return argparse._StoreAction(
