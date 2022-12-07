@@ -21,7 +21,7 @@ def update_matches(files, include_regex):
         if match:
             if match.groupdict():
                 if "reason" in match.groupdict().keys():
-                    raise ValueError(eval("reason is a reserved name for the job matrix"))
+                    raise ValueError("reason is a reserved name for the job matrix")
                 key = hdict(match.groupdict())
             else:
                 key = hdict({"path": filename})
@@ -33,10 +33,9 @@ def generate_matrix(
         files: list[dict[str, str]],
         include_regex: str,
         defaults: bool = False,
-        default_patterns: object = None,
-        default_dir: object = os.getenv("GITHUB_WORKSPACE", os.curdir)) -> list[Any]:
+        default_patterns: list = None,
+        default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir)) -> list[Any]:
 
-    default_patterns = list() if default_patterns is None else default_patterns
     include_regex = re.compile(include_regex, re.M | re.S)
 
     changed_files = [(e["filename"], e["status"]) for e in files]
@@ -136,9 +135,7 @@ def github_webhook_ref(dest: str, option_strings: list):
                     option_strings=option_strings,
                 )
             else:
-                raise NotImplementedError(
-                    eval(f"unsupported github event {github_event_name}")
-                )
+                raise NotImplementedError(f"unsupported github event {github_event_name}")
 
     return argparse._StoreAction(
         required=True, dest=dest, option_strings=option_strings
