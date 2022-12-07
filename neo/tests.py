@@ -153,9 +153,11 @@ class TestChangedFiles(unittest.TestCase):
                 {"filename": "my_other_file/hello", "status": "modified"},
             ]
         )
+        with contextlib.redirect_stdout(io.StringIO()) as f:
+            neo.set_github_actions_output(matrix)
 
         neo.set_github_actions_output(matrix)
-        output = os.getenv('GITHUB_OUTPUT', None)
+        output = f.getvalue()
         expected_matrix_output = json.dumps({"include": matrix})
 
         self.assertIn(f"matrix={expected_matrix_output}", output)
