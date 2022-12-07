@@ -43,6 +43,8 @@ jobs:
       - name: Generate matrix
         id: neo
         uses: ./
+        env:
+          NEO_LOG_LEVEL: DEBUG
         with:
           pattern: (?P<dir>[^/]+)/
           defaults: true
