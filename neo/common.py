@@ -1,5 +1,4 @@
 from functools import total_ordering
-import logging
 import os
 import argparse
 

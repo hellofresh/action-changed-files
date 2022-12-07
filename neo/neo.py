@@ -12,34 +12,34 @@ from urllib.parse import quote_plus
 from typing import List
 
 from common import env_default, hdict, strtobool
-from requests.auth import HTTPBasicAuth
+
+
+def update_matches(files, include_regex):
+    matches = defaultdict(set)
+    for (filename, status) in files:
+        match = include_regex.match(filename)
+        if match:
+            if match.groupdict():
+                if "reason" in match.groupdict().keys():
+                    raise ValueError("reason is a reserved name for the job matrix")
+                key = hdict(match.groupdict())
+            else:
+                key = hdict({"path": filename})
+            matches[key].add(status)
+    return matches
 
 
 def generate_matrix(
-    files: dict,
-    include_regex: str,
-    defaults=False,
-    default_patterns=[],
-    default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir),
-):
+        files: dict,
+        include_regex: str,
+        defaults=False,
+        default_patterns=None,
+        default_dir=os.getenv("GITHUB_WORKSPACE", os.curdir)):
+
+    default_patterns = list() if default_patterns is None else default_patterns
     include_regex = re.compile(include_regex, re.M | re.S)
 
     changed_files = [(e["filename"], e["status"]) for e in files]
-    matches = defaultdict(set)
-
-    def update_matches(files: List[str]):
-        for (filename, status) in files:
-            match = include_regex.match(filename)
-            if match:
-                if match.groupdict():
-                    if "reason" in match.groupdict().keys():
-                        raise ValueError("reason is a reserved name for the job matrix")
-                    key = hdict(match.groupdict())
-                else:
-                    key = hdict({"path": filename})
-                matches[key].add(status)
-
-    update_matches(changed_files)
 
     # check if changed files match the so-called default patterns
     matched_default_patterns = [
@@ -51,6 +51,8 @@ def generate_matrix(
     if matched_default_patterns:
         logging.info("Files changed in defaults patterns: %s", matched_default_patterns)
 
+    matches = update_matches(changed_files, include_regex)
+
     # if nothing changed, list all files/directories
     if (not matches and defaults) or matched_default_patterns:
         logging.info(
@@ -61,39 +63,54 @@ def generate_matrix(
             for path, _, files in os.walk(default_dir)
             for f in files
         ]
-        update_matches(default_files)
+        matches = update_matches(default_files, include_regex)
 
     # mark matrix entries with a status if all its matches have the same status
-    matrix = []
+    status_matrix = []
     for (groups, statuses) in matches.items():
         groups["reason"] = statuses.pop() if len(statuses) == 1 else "updated"
-        matrix.append(groups)
+        status_matrix.append(groups)
 
     # convert back to a dict (hashable, serializable)
-    return sorted(matrix)
+    return sorted(status_matrix)
 
 
 def main(
-    github_token: str,
-    github_repository: str,
-    github_base_ref: str,
-    github_head_ref: str,
-    include_regex: str,
-    defaults: List[str] = [],
-    default_patterns: List[str] = [],
-    per_page: int = 0,
-):
+        github_token: str,
+        github_repository: str,
+        github_base_ref: str,
+        github_head_ref: str,
+        include_regex: str,
+        defaults=None,
+        default_patterns=None,
+        per_page: int = 0):
+    """
+
+    :param github_token:
+    :param github_repository:
+    :param github_base_ref:
+    :param github_head_ref:
+    :param include_regex:
+    :param defaults:
+    :param default_patterns:
+    :param per_page:
+    :return:
+    """
+    default_patterns = [] if default_patterns is None else default_patterns
+    defaults = [] if defaults is None else defaults
+
     with requests.session() as session:
-        session.hooks = {"response": lambda r, *args, **kwargs: r.raise_for_status()}
+        session.hooks = {"response": lambda resp, *resp_args, **kwargs: resp.raise_for_status()}
         # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
         session.headers["Authorization"] = f"token {github_token}"
         if per_page:
             session.params = {"per_page": per_page}
 
-        url = f"https://api.github.com/repos/{github_repository}/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
-        logging.info("GitHub API request: %s", url)
+        compare_url = f"https://api.github.com/repos/{github_repository}" \
+                      f"/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
+        logging.info(f"GitHub API request: {compare_url}")
 
-        r = session.get(url)
+        r = session.get(compare_url)
         files = r.json().get("files", [])
         while link := r.links.get("next"):
             next_page_url = link["url"]
@@ -101,9 +118,7 @@ def main(
             r = session.get(next_page_url)
             files.extend(r.json().get("files", []))
 
-    matrix = generate_matrix(files, include_regex, defaults, default_patterns)
-
-    return matrix
+    return generate_matrix(files, include_regex, defaults, default_patterns)
 
 
 def github_webhook_ref(dest: str, option_strings: list):
@@ -140,10 +155,12 @@ def github_webhook_ref(dest: str, option_strings: list):
         required=True, dest=dest, option_strings=option_strings
     )
 
-def set_github_actions_output(matrix: List):
-    files_json = json.dumps({"include": matrix})
-    print(f"::set-output name=matrix::{files_json}")
-    print(f"::set-output name=matrix-length::{len(matrix)}")
+
+def set_github_actions_output(generated_matrix: List):
+    files_json = json.dumps({"include": generated_matrix})
+    os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix={files_json}"
+    os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix-length={len(files_json)}"
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
