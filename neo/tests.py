@@ -156,7 +156,6 @@ class TestChangedFiles(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as f:
             neo.set_github_actions_output(matrix)
 
-        neo.set_github_actions_output(matrix)
         output = f.getvalue()
         expected_matrix_output = json.dumps({"include": matrix})
 

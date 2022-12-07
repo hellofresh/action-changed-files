@@ -10,6 +10,7 @@ import json
 import re
 from urllib.parse import quote_plus
 from typing import List, Any
+import subprocess
 
 from common import env_default, hdict, strtobool
 
@@ -158,8 +159,6 @@ def github_webhook_ref(dest: str, option_strings: list):
 
 def set_github_actions_output(generated_matrix: List):
     files_json = json.dumps({"include": generated_matrix})
-    # os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix={files_json}"
-    # os.environ['GITHUB_OUTPUT'] = f"{os.getenv('GITHUB_OUTPUT')}\nmatrix-length={len(generated_matrix)}"
     print(f"matrix={files_json}")
     print(f"matrix-length={len(generated_matrix)}")
 
