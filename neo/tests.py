@@ -153,20 +153,12 @@ class TestChangedFiles(unittest.TestCase):
                 {"filename": "my_other_file/hello", "status": "modified"},
             ]
         )
-        with contextlib.redirect_stdout(io.StringIO()) as f:
-            neo.set_github_actions_output(matrix)
 
-        output_old = f.getvalue()
         output = os.getenv('GITHUB_OUTPUT', None)
 
         expected_matrix_output = json.dumps({"include": matrix})
         self.assertIn(f"matrix={expected_matrix_output}", output)
         self.assertIn(f"matrix-length=3", output)
-        self.assertEqual(
-            f"""::set-output name=matrix::{expected_matrix_output}::set-output name=matrix-length::3\n""",
-            output_old,
-        )
-
 
 class IntegrationTest(unittest.TestCase):
     empty_repo_commit_sha = "6b5794416e6750d16fb126a04eadb681349e6947"
