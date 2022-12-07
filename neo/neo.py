@@ -10,7 +10,6 @@ import json
 import re
 from urllib.parse import quote_plus
 from typing import List, Any
-import subprocess
 
 from common import env_default, hdict, strtobool
 
