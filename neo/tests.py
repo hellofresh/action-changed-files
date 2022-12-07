@@ -160,6 +160,7 @@ class TestChangedFiles(unittest.TestCase):
         self.assertIn(f"matrix={expected_matrix_output}", output)
         self.assertIn(f"matrix-length=3", output)
 
+
 class IntegrationTest(unittest.TestCase):
     empty_repo_commit_sha = "6b5794416e6750d16fb126a04eadb681349e6947"
     initial_import_commit_sha = "191fe221420a833dc9a43d3338c1d94ccab94ea6"
