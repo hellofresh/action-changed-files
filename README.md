@@ -1,4 +1,15 @@
-# action-changed-files
+# action-changed-files 
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/hellofresh/action-changed-files?style=for-the-badge)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/hellofresh/action-changed-files?style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hellofresh/action-changed-files/Test?label=Status&style=for-the-badge)
+
+![GitHub last commit](https://img.shields.io/github/last-commit/hellofresh/action-changed-files?style=for-the-badge)
+![GitHub Release Date](https://img.shields.io/github/release-date/hellofresh/action-changed-files?style=for-the-badge)
+![GitHub issues](https://img.shields.io/github/issues-raw/hellofresh/action-changed-files?style=for-the-badge)
+
+![GitHub](https://img.shields.io/github/license/hellofresh/action-changed-files?style=for-the-badge)
+
 
 Generate a GitHub Actions job matrix based on changed files (with an extra twist).
 
