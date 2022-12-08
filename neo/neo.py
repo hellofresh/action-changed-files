@@ -39,7 +39,7 @@ def update_matches(files, include_regex):
 
 
 def generate_matrix(
-    files: list[dict[str, str]],
+    files: list(),
     include_regex: str,
     defaults: bool = False,
     default_patterns: list | None = None,
