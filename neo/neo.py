@@ -9,7 +9,6 @@ import requests
 import json
 import re
 from urllib.parse import quote_plus
-from typing import List, Any
 
 from common import env_default, hdict, strtobool
 
@@ -44,7 +43,7 @@ def generate_matrix(
     defaults: bool = False,
     default_patterns: list = None,
     default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir),
-) -> list[Any]:
+) -> list():
     """
     The generate_matrix function takes a list of files and returns a matrix of
     files that match the provided pattern. The function also takes an optional
