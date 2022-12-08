@@ -39,6 +39,7 @@ def strtobool(val):
     else:
         raise ValueError("invalid truth value %r" % (val,))
 
+
 @total_ordering
 class hdict(dict):
     def __hash__(self):
@@ -48,4 +49,6 @@ class hdict(dict):
         # concatenate keys and values for ordering
         keys = sorted(self.keys())
         other_keys = sorted(other.keys())
-        return sorted(f"{k}-{self[k]}" for k in keys) < sorted(f"{k}-{other[k]}" for k in other_keys)
+        return sorted(f"{k}-{self[k]}" for k in keys) < sorted(
+            f"{k}-{other[k]}" for k in other_keys
+        )
