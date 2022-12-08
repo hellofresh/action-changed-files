@@ -42,7 +42,7 @@ def generate_matrix(
     files: list(),
     include_regex: str,
     defaults: bool = False,
-    default_patterns: list | None = None,
+    default_patterns: list = None,
     default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir),
 ) -> list[Any]:
     """
@@ -106,7 +106,7 @@ def main(
     github_head_ref: str,
     include_regex: str,
     defaults: bool = False,
-    default_patterns: list | None = None,
+    default_patterns: list = None,
     per_page: int = 0,
 ):
 
