@@ -38,12 +38,12 @@ def update_matches(files, include_regex):
 
 
 def generate_matrix(
-    files: list(),
+    files: list,
     include_regex: str,
     defaults: bool = False,
     default_patterns: list = None,
     default_dir: str = os.getenv("GITHUB_WORKSPACE", os.curdir),
-) -> list():
+) -> list:
     """
     The generate_matrix function takes a list of files and returns a matrix of
     files that match the provided pattern. The function also takes an optional
@@ -182,7 +182,7 @@ def github_webhook_ref(dest: str, option_strings: list):
     )
 
 
-def set_github_actions_output(generated_matrix: List[dict]) -> None :
+def set_github_actions_output(generated_matrix: list) -> None:
     """
     The set_github_actions_output function is used to generate the output for GitHub Actions.
     It takes in a list of dictionaries and prints out two environment variables: matrix, which contains
