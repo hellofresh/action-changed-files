@@ -13,12 +13,13 @@ from urllib.parse import quote_plus
 from common import env_default, hdict, strtobool
 
 
-def update_matches(files, include_regex):
+def update_matches(files, include_regex, old_matches=defaultdict(set), ):
     """
     The update_matches function takes a list of files and their statuses,
     and returns a dictionary mapping the job matrix keys to sets of statuses.
     For example:
 
+    :param old_matches: old matches object to update
     :param files: Store the files that are found in the directory
     :param include_regex: Filter the files that are included in the job matrix
     :return: A dictionary of dictionaries
@@ -33,7 +34,10 @@ def update_matches(files, include_regex):
                 key = hdict(match.groupdict())
             else:
                 key = hdict({"path": filename})
+            if key in list(old_matches.keys()):
+                status = old_matches.pop(key).pop()
             matches[key].add(status)
+
     return matches
 
 
@@ -86,8 +90,7 @@ def generate_matrix(
             for path, _, files in os.walk(default_dir)
             for f in files
         ]
-        matches = update_matches(default_files, include_regex)
-
+        matches = update_matches( default_files, include_regex, matches)
     # mark matrix entries with a status if all its matches have the same status
     status_matrix = []
     for (groups, statuses) in matches.items():

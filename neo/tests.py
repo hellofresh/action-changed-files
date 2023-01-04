@@ -22,6 +22,47 @@ class TestChangedFiles(unittest.TestCase):
             )
         )
 
+    def test_no_changes_with_default_pattern(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(os.path.join(d, "staging.txt")).touch()
+            Path(os.path.join(d, "live.txt")).touch()
+            self.assertEqual(
+                neo.generate_matrix(
+                    include_regex="(?P<environment>staging|live)",
+                    default_patterns=["clusters/**"],
+                    default_dir=d,
+                    files=[
+                        {"filename": "blah", "status": "modified"},
+                        {"filename": "clusters/sample.json", "status": "modified"},
+                    ],
+                ),
+                [
+                    {'environment': 'live', 'reason': 'default'},
+                    {'environment': 'staging', 'reason': 'default'}
+                ],
+            )
+
+    def test_changes_with_default_pattern(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(os.path.join(d, "staging.txt")).touch()
+            Path(os.path.join(d, "live.txt")).touch()
+            self.assertEqual(
+                neo.generate_matrix(
+                    include_regex="(?P<environment>staging|live)",
+                    default_patterns=["clusters/**"],
+                    default_dir=d,
+                    files=[
+                        {"filename": "blah", "status": "modified"},
+                        {"filename": "clusters/sample.json", "status": "modified"},
+                        {"filename": "staging.txt", "status": "modified"},
+                    ],
+                ),
+                [
+                    {'environment': 'live', 'reason': 'default'},
+                    {'environment': 'staging', 'reason': 'modified'}
+                ],
+            )
+
     def test_no_changes_with_defaults(self):
         with tempfile.TemporaryDirectory() as d:
             Path(os.path.join(d, "staging.txt")).touch()
