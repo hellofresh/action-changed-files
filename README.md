@@ -2,8 +2,7 @@
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hellofresh/action-changed-files?style=for-the-badge)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/hellofresh/action-changed-files?style=for-the-badge)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hellofresh/action-changed-files/Test?label=Status&style=for-the-badge)
-
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hellofresh/action-changed-files/test.yaml?label=Status&style=for-the-badge&branch=master)
 ![GitHub last commit](https://img.shields.io/github/last-commit/hellofresh/action-changed-files?style=for-the-badge)
 ![GitHub Release Date](https://img.shields.io/github/release-date/hellofresh/action-changed-files?style=for-the-badge)
 ![GitHub issues](https://img.shields.io/github/issues-raw/hellofresh/action-changed-files?style=for-the-badge)
