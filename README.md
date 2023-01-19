@@ -69,7 +69,7 @@ jobs:
     steps:
       - name: Generate matrix | Infrastructure
         id: neo-infrastructure
-        uses: hellofresh/action-changed-files
+        uses: hellofresh/action-changed-files@v3
         with:
             pattern: infrastructure/(?P<environment>[^/]+)
             default-patterns: |
@@ -78,7 +78,7 @@ jobs:
 
       - name: Generate matrix | Library
         id: neo-library
-        uses: hellofresh/action-changed-files
+        uses: hellofresh/action-changed-files@v3
         with:
             pattern: library/(?P<lib>(?!common)[^/]+)
             default-patterns: |
@@ -167,6 +167,31 @@ The same applies to any status, like `added` or `modified`.
 
 Note: if a pattern matching to the same set of groups were caused by multiple type of changes, the `reason` field is marked as `?`.
 
+### Logging and debugging
+By default the log level for the action is `INFO` but can be overriden by setting `NEO_LOG_LEVEL` env variable 
+example:
+```yaml
+  sample-job:
+    name: Test action
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.sample-step.outputs.matrix }}
+      matrix-length: ${{ steps.sample-step.outputs.matrix-length }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Generate matrix
+        id: sample-step
+        uses: hellofresh/action-changed-files@v3
+        env:
+          NEO_LOG_LEVEL: DEBUG
+        with:
+          pattern: (?P<dir>[^/]+)/
+          defaults: true
+          default-patterns: |
+            .github/**
+
+```
 
 ## Reference
 
