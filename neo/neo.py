@@ -107,7 +107,7 @@ def main(
     github_base_ref: str,
     github_head_ref: str,
     include_regex: str,
-    batch_size: int,
+    batch_size: int = 0,
     defaults: bool = False,
     default_patterns: list = None,
     per_page: int = 0,
