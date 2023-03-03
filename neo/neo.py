@@ -107,6 +107,7 @@ def main(
     github_base_ref: str,
     github_head_ref: str,
     include_regex: str,
+    batch_size: int,
     defaults: bool = False,
     default_patterns: list = None,
     per_page: int = 0,
@@ -137,7 +138,13 @@ def main(
             r = session.get(next_page_url)
             files.extend(r.json().get("files", []))
 
-    return generate_matrix(files, include_regex, defaults, default_patterns)
+    compiled_matrix = generate_matrix(files, include_regex, defaults, default_patterns)
+    if batch_size > 0:
+        split = len(compiled_matrix)//batch_size
+        batch_compiled_matrix = [compiled_matrix[i:i + split] for i in range(0, len(compiled_matrix), split)]
+        return batch_compiled_matrix
+    else:
+        return compiled_matrix
 
 
 def github_webhook_ref(dest: str, option_strings: list):
@@ -232,6 +239,15 @@ if __name__ == "__main__":
         help="if any changed files match this pattern, apply --defaults",
         nargs="+",
         default=os.getenv("DEFAULT_PATTERNS", "").splitlines(),
+    )
+
+    user_arg_group.add_argument(
+        "--batch",
+        dest="batch_size",
+        help="if we want matrix output in batches, default is 0, will output the whole matrix in one",
+        type=int,
+        required=False,
+        default=0
     )
 
     args = vars(parser.parse_args())
