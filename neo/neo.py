@@ -8,6 +8,8 @@ import logging
 import requests
 import json
 import re
+import uuid
+
 from urllib.parse import quote_plus
 
 from common import env_default, hdict, strtobool
@@ -184,6 +186,17 @@ def github_webhook_ref(dest: str, option_strings: list):
         required=True, dest=dest, option_strings=option_strings
     )
 
+def set_multiline_output(name, value):
+    """
+    The set_multiline_output sets an output to GitHub Actions.
+    This was taken from:
+    https://github.com/orgs/community/discussions/28146#discussioncomment-4110404
+    """
+    with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+        delimiter = uuid.uuid1()
+        print(f'{name}<<{delimiter}', file=fh)
+        print(value, file=fh)
+        print(delimiter, file=fh)
 
 def set_github_actions_output(generated_matrix: list) -> None:
     """
@@ -196,9 +209,8 @@ def set_github_actions_output(generated_matrix: list) -> None:
     :return: The generated matrix in a format that can be used by the github actions workflow
     """
     files_json = json.dumps({"include": generated_matrix})
-    print(f"matrix={files_json}")
-    print(f"matrix-length={len(generated_matrix)}")
-
+    set_multiline_output("matrix", files_json)
+    set_multiline_output("matrix-length", generated_matrix)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
