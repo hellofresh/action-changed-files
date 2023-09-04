@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run tests
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run tests
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -39,7 +39,7 @@ jobs:
       matrix-length: ${{ steps.neo.outputs.matrix-length }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Generate matrix
         id: neo
         uses: ./

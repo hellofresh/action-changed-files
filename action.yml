@@ -29,7 +29,7 @@ runs:
   steps:
     # required to compare the pattern on the files in the repo
     - if: inputs.defaults || inputs.default-patterns != ''
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - id: neo
       shell: bash
