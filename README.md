@@ -96,8 +96,8 @@ jobs:
   build:
     needs: [ generate-matrix ]
     strategy:
-      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix-build) }}
-    if: ${{ fromJson(needs.generate-matrix.outputs.matrix-build).include[0] }}
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix-library) }}
+    if: ${{ fromJson(needs.generate-matrix.outputs.matrix-library).include[0] }}
     steps:
         - name: Building library
           run: echo "Building ${{ matrix.lib }}"
