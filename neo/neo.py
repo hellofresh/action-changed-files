@@ -157,7 +157,7 @@ def github_webhook_ref(dest: str, option_strings: list):
     if github_event_path:
         with open(github_event_path, "r") as fp:
             github_event = json.load(fp)
-            if github_event_name == "pull_request":
+            if github_event_name in ["pull_request", "pull_request_target"]:
                 return argparse.Action(
                     default=github_event["pull_request"]["head"]["sha"]
                     if is_github_head_ref
