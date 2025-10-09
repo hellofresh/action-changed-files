@@ -123,8 +123,9 @@ def main(
         if per_page:
             session.params = {"per_page": per_page}
 
+        github_api_url = os.environ['GITHUB_API_URL']
         compare_url = (
-            f"https://api.github.com/repos/{github_repository}"
+            f"{github_api_url}/repos/{github_repository}"
             f"/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
         )
         logging.info(f"GitHub API request: {compare_url}")
