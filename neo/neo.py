@@ -10,10 +10,7 @@ import json
 import re
 from urllib.parse import quote_plus
 
-try:
-    from .common import env_default, hdict, strtobool
-except ImportError:
-    from common import env_default, hdict, strtobool
+from common import env_default, hdict, strtobool
 
 
 def update_matches(
