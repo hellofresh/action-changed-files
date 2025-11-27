@@ -10,7 +10,10 @@ import json
 import re
 from urllib.parse import quote_plus
 
-from common import env_default, hdict, strtobool
+try:
+    from .common import env_default, hdict, strtobool
+except ImportError:
+    from common import env_default, hdict, strtobool
 
 
 def update_matches(
@@ -119,13 +122,13 @@ def main(
     if default_patterns is None:
         default_patterns = []
 
-    # Check if this is a workflow_dispatch event
+    # Check if this is a workflow_dispatch or schedule event
     github_event_name = os.getenv("GITHUB_EVENT_NAME", None)
 
-    # For workflow_dispatch events, use default behavior (list all matched directories)
-    if github_event_name == "workflow_dispatch":
+    # For workflow_dispatch and schedule events, use default behavior (list all matched directories)
+    if github_event_name in ["workflow_dispatch", "schedule"]:
         logging.info(
-            "workflow_dispatch event detected, using default behavior to list all matched directories"
+            f"{github_event_name} event detected, using default behavior to list all matched directories"
         )
         # Pass empty files list, but force defaults=True to trigger directory listing behavior
         return generate_matrix([], include_regex, True, default_patterns)
@@ -198,6 +201,17 @@ def github_webhook_ref(dest: str, option_strings: list):
             elif github_event_name == "workflow_dispatch":
                 # For workflow_dispatch, we use the default branch ref
                 # since this is a manual trigger without specific commit comparison
+                return argparse.Action(
+                    default=github_event.get("ref", "refs/heads/main").replace(
+                        "refs/heads/", ""
+                    ),
+                    required=False,
+                    dest=dest,
+                    option_strings=option_strings,
+                )
+            elif github_event_name == "schedule":
+                # For scheduled events, we use the default branch ref
+                # since this is a time-based trigger without specific commit comparison
                 return argparse.Action(
                     default=github_event.get("ref", "refs/heads/main").replace(
                         "refs/heads/", ""
