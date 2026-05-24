@@ -37,8 +37,8 @@ class TestChangedFiles(unittest.TestCase):
                     ],
                 ),
                 [
-                    {'environment': 'live', 'reason': 'default'},
-                    {'environment': 'staging', 'reason': 'default'}
+                    {"environment": "live", "reason": "default"},
+                    {"environment": "staging", "reason": "default"},
                 ],
             )
 
@@ -58,8 +58,8 @@ class TestChangedFiles(unittest.TestCase):
                     ],
                 ),
                 [
-                    {'environment': 'live', 'reason': 'default'},
-                    {'environment': 'staging', 'reason': 'modified'}
+                    {"environment": "live", "reason": "default"},
+                    {"environment": "staging", "reason": "modified"},
                 ],
             )
 
@@ -202,6 +202,80 @@ class TestChangedFiles(unittest.TestCase):
 
         self.assertIn(f"matrix={expected_matrix_output}", output)
         self.assertIn(f"matrix-length=3", output)
+
+    def test_workflow_dispatch_behavior(self):
+        """Test that workflow_dispatch events use default behavior to list all matched directories"""
+        with tempfile.TemporaryDirectory() as d:
+            # Create test directory structure
+            staging_dir = os.path.join(d, "staging")
+            live_dir = os.path.join(d, "live")
+            os.makedirs(staging_dir)
+            os.makedirs(live_dir)
+            Path(os.path.join(staging_dir, "config.yaml")).touch()
+            Path(os.path.join(live_dir, "config.yaml")).touch()
+
+            # Simulate workflow_dispatch event by setting environment variable
+            original_event = os.getenv("GITHUB_EVENT_NAME")
+            os.environ["GITHUB_EVENT_NAME"] = "workflow_dispatch"
+
+            try:
+                # Test that workflow_dispatch triggers default behavior (listing all files)
+                result = neo.generate_matrix(
+                    files=[],  # Empty files list to simulate workflow_dispatch
+                    include_regex="(?P<environment>staging|live)",
+                    defaults=True,  # This should be forced for workflow_dispatch
+                    default_patterns=[],
+                    default_dir=d,  # Use our test directory
+                )
+
+                # Should return entries for both staging and live environments
+                environments = [entry.get("environment") for entry in result]
+                self.assertIn("staging", environments)
+                self.assertIn("live", environments)
+
+            finally:
+                # Restore original environment
+                if original_event is None:
+                    os.environ.pop("GITHUB_EVENT_NAME", None)
+                else:
+                    os.environ["GITHUB_EVENT_NAME"] = original_event
+
+    def test_schedule_behavior(self):
+        """Test that schedule events use default behavior to list all matched directories"""
+        with tempfile.TemporaryDirectory() as d:
+            # Create test directory structure
+            staging_dir = os.path.join(d, "staging")
+            live_dir = os.path.join(d, "live")
+            os.makedirs(staging_dir)
+            os.makedirs(live_dir)
+            Path(os.path.join(staging_dir, "config.yaml")).touch()
+            Path(os.path.join(live_dir, "config.yaml")).touch()
+
+            # Simulate schedule event by setting environment variable
+            original_event = os.getenv("GITHUB_EVENT_NAME")
+            os.environ["GITHUB_EVENT_NAME"] = "schedule"
+
+            try:
+                # Test that schedule triggers default behavior (listing all files)
+                result = neo.generate_matrix(
+                    files=[],  # Empty files list to simulate schedule
+                    include_regex="(?P<environment>staging|live)",
+                    defaults=True,  # This should be forced for schedule
+                    default_patterns=[],
+                    default_dir=d,  # Use our test directory
+                )
+
+                # Should return entries for both staging and live environments
+                environments = [entry.get("environment") for entry in result]
+                self.assertIn("staging", environments)
+                self.assertIn("live", environments)
+
+            finally:
+                # Restore original environment
+                if original_event is None:
+                    os.environ.pop("GITHUB_EVENT_NAME", None)
+                else:
+                    os.environ["GITHUB_EVENT_NAME"] = original_event
 
 
 class IntegrationTest(unittest.TestCase):
