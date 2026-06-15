@@ -10,10 +10,17 @@ import json
 import re
 from urllib.parse import quote_plus
 
-from common import env_default, hdict, strtobool
+try:
+    from .common import env_default, hdict, strtobool
+except ImportError:
+    from common import env_default, hdict, strtobool
 
 
-def update_matches(files, include_regex, old_matches=defaultdict(set), ):
+def update_matches(
+    files,
+    include_regex,
+    old_matches=defaultdict(set),
+):
     """
     The update_matches function takes a list of files and their statuses,
     and returns a dictionary mapping the job matrix keys to sets of statuses.
@@ -25,7 +32,7 @@ def update_matches(files, include_regex, old_matches=defaultdict(set), ):
     :return: A dictionary of dictionaries
     """
     matches = defaultdict(set)
-    for (filename, status) in files:
+    for filename, status in files:
         match = include_regex.match(filename)
         if match:
             if match.groupdict():
@@ -90,10 +97,10 @@ def generate_matrix(
             for path, _, files in os.walk(default_dir)
             for f in files
         ]
-        matches = update_matches( default_files, include_regex, matches)
+        matches = update_matches(default_files, include_regex, matches)
     # mark matrix entries with a status if all its matches have the same status
     status_matrix = []
-    for (groups, statuses) in matches.items():
+    for groups, statuses in matches.items():
         groups["reason"] = statuses.pop() if len(statuses) == 1 else "updated"
         status_matrix.append(groups)
 
@@ -114,6 +121,18 @@ def main(
 
     if default_patterns is None:
         default_patterns = []
+
+    # Check if this is a workflow_dispatch or schedule event
+    github_event_name = os.getenv("GITHUB_EVENT_NAME", None)
+
+    # For workflow_dispatch and schedule events, use default behavior (list all matched directories)
+    if github_event_name in ["workflow_dispatch", "schedule"]:
+        logging.info(
+            f"{github_event_name} event detected, using default behavior to list all matched directories"
+        )
+        # Pass empty files list, but force defaults=True to trigger directory listing behavior
+        return generate_matrix([], include_regex, True, default_patterns)
+
     with requests.session() as session:
         session.hooks = {
             "response": lambda resp, *resp_args, **kwargs: resp.raise_for_status()
@@ -159,18 +178,44 @@ def github_webhook_ref(dest: str, option_strings: list):
             github_event = json.load(fp)
             if github_event_name == "pull_request":
                 return argparse.Action(
-                    default=github_event["pull_request"]["head"]["sha"]
-                    if is_github_head_ref
-                    else github_event["pull_request"]["base"]["sha"],
+                    default=(
+                        github_event["pull_request"]["head"]["sha"]
+                        if is_github_head_ref
+                        else github_event["pull_request"]["base"]["sha"]
+                    ),
                     required=False,
                     dest=dest,
                     option_strings=option_strings,
                 )
             elif github_event_name == "push":
                 return argparse.Action(
-                    default=github_event["after"]
-                    if is_github_head_ref
-                    else github_event["before"],
+                    default=(
+                        github_event["after"]
+                        if is_github_head_ref
+                        else github_event["before"]
+                    ),
+                    required=False,
+                    dest=dest,
+                    option_strings=option_strings,
+                )
+            elif github_event_name == "workflow_dispatch":
+                # For workflow_dispatch, we use the default branch ref
+                # since this is a manual trigger without specific commit comparison
+                return argparse.Action(
+                    default=github_event.get("ref", "refs/heads/main").replace(
+                        "refs/heads/", ""
+                    ),
+                    required=False,
+                    dest=dest,
+                    option_strings=option_strings,
+                )
+            elif github_event_name == "schedule":
+                # For scheduled events, we use the default branch ref
+                # since this is a time-based trigger without specific commit comparison
+                return argparse.Action(
+                    default=github_event.get("ref", "refs/heads/main").replace(
+                        "refs/heads/", ""
+                    ),
                     required=False,
                     dest=dest,
                     option_strings=option_strings,
@@ -237,9 +282,11 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     logging.basicConfig(
-        level=logging.DEBUG
-        if os.getenv("NEO_LOG_LEVEL", "INFO") == "DEBUG"
-        else logging.INFO
+        level=(
+            logging.DEBUG
+            if os.getenv("NEO_LOG_LEVEL", "INFO") == "DEBUG"
+            else logging.INFO
+        )
     )
 
     matrix = main(**args)
