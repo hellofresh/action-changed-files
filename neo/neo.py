@@ -5,10 +5,10 @@ import os
 import argparse
 import fnmatch
 import logging
-import requests
 import json
 import re
-from urllib.parse import quote_plus
+import urllib.parse
+import urllib.request
 
 from common import env_default, hdict, strtobool
 
@@ -101,6 +101,33 @@ def generate_matrix(
     return sorted(status_matrix)
 
 
+def parse_link_header(header_value: str) -> dict:
+    """
+    Parses an RFC 5988 Link header (used by the GitHub API for pagination) into
+    a dict keyed by rel value, e.g. {"next": "https://...", "last": "https://..."}
+    """
+    links = {}
+    for part in (header_value or "").split(","):
+        segments = part.split(";")
+        url = segments[0].strip().strip("<>")
+        for segment in segments[1:]:
+            key, _, value = segment.strip().partition("=")
+            if key == "rel":
+                links[value.strip('"')] = url
+    return links
+
+
+def github_api_get(url: str, github_token: str) -> tuple:
+    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+    request = urllib.request.Request(
+        url, headers={"Authorization": f"token {github_token}"}
+    )
+    with urllib.request.urlopen(request) as response:
+        payload = json.load(response)
+        links = parse_link_header(response.headers.get("Link"))
+    return payload, links
+
+
 def main(
     github_token: str,
     github_repository: str,
@@ -114,28 +141,23 @@ def main(
 
     if default_patterns is None:
         default_patterns = []
-    with requests.session() as session:
-        session.hooks = {
-            "response": lambda resp, *resp_args, **kwargs: resp.raise_for_status()
-        }
-        # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
-        session.headers["Authorization"] = f"token {github_token}"
-        if per_page:
-            session.params = {"per_page": per_page}
 
-        compare_url = (
-            f"https://api.github.com/repos/{github_repository}"
-            f"/compare/{quote_plus(github_base_ref)}...{quote_plus(github_head_ref)}"
-        )
-        logging.info(f"GitHub API request: {compare_url}")
+    compare_url = (
+        f"https://api.github.com/repos/{github_repository}"
+        f"/compare/{urllib.parse.quote_plus(github_base_ref)}...{urllib.parse.quote_plus(github_head_ref)}"
+    )
+    if per_page:
+        compare_url = f"{compare_url}?{urllib.parse.urlencode({'per_page': per_page})}"
+    logging.info(f"GitHub API request: {compare_url}")
 
-        r = session.get(compare_url)
-        files = r.json().get("files", [])
-        while link := r.links.get("next"):
-            next_page_url = link["url"]
-            logging.info(f"Loading next page: {next_page_url}")
-            r = session.get(next_page_url)
-            files.extend(r.json().get("files", []))
+    files = []
+    next_url = compare_url
+    while next_url:
+        payload, links = github_api_get(next_url, github_token)
+        files.extend(payload.get("files", []))
+        next_url = links.get("next")
+        if next_url:
+            logging.info(f"Loading next page: {next_url}")
 
     return generate_matrix(files, include_regex, defaults, default_patterns)
 
