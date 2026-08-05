@@ -102,6 +102,7 @@ def generate_matrix(
 
 
 def parse_link_header(header_value: str) -> dict:
+    # See https://docs.python-requests.org/en/latest/user/advanced/#link-headers
     """
     Parses an RFC 5988 Link header (used by the GitHub API for pagination) into
     a dict keyed by rel value, e.g. {"next": "https://...", "last": "https://..."}
