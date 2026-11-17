@@ -11,7 +11,7 @@ on:
 jobs:
   python-unit-tests:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: [default-arm, hf-all-tools]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -22,7 +22,7 @@ jobs:
 
   python-integration-tests:
     name: Integration tests
-    runs-on: ubuntu-latest
+    runs-on: [default-arm, hf-all-tools]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -33,7 +33,7 @@ jobs:
 
   neo:
     name: Test action
-    runs-on: ubuntu-latest
+    runs-on: [default-arm, hf-all-tools]
     outputs:
       matrix: ${{ steps.neo.outputs.matrix }}
       matrix-length: ${{ steps.neo.outputs.matrix-length }}
@@ -53,7 +53,7 @@ jobs:
 
   matrix-check:
     name: Check matrix
-    runs-on: ubuntu-latest
+    runs-on: [default-arm, hf-all-tools]
     needs: [ neo ]
     strategy:
       matrix: ${{ fromJson(needs.neo.outputs.matrix ) }}
